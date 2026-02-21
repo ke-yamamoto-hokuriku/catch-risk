@@ -3,12 +3,11 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>キャッチ居酒屋可能性指数 — Catch Izakaya Risk Index</title>
+<title>金沢片町 キャッチ居酒屋指数 — Catch Izakaya Risk Index</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { background: #020617; }
@@ -147,57 +146,6 @@ function sendToSheet(result, riskData) {
   } catch (e) { console.error("Sheet send error:", e); }
 }
 
-/* ─── Excel Export ─── */
-function exportToExcel(results) {
-  const rows = results.map((r, i) => {
-    const risk = calcFromData(r);
-    return {
-      "No.": i + 1, "店名": r.shopName, "エリア": r.area || "", "住所": r.address,
-      "階数": r.floor != null ? `${r.floor}F` : "",
-      "食べログ評点": r.tabelog ?? "", "食べログ口コミ数": r.tabelogCount ?? "",
-      "Gマップ評点": r.gmap ?? "", "Gマップ口コミ数": r.gmapCount ?? "",
-      "最安飲放コース": r.cheapCourse ?? "", "冠語": r.crownName ? "○" : "",
-      "同住所店舗": r.sameAddress ?? "",
-      "キャッチ関連口コミ": (r.catchKeywords || []).join(" / "),
-      "リスクスコア": risk.pct, "判定": risk.level,
-      "リスク要因": risk.factors.map(f => `${f.l}(+${f.w})`).join(", "),
-      "特記事項": r.summary, "調査日時": r.timestamp || ""
-    };
-  });
-  const ws = XLSX.utils.json_to_sheet(rows);
-  ws["!cols"] = [
-    { wch: 4 }, { wch: 28 }, { wch: 14 }, { wch: 30 }, { wch: 6 },
-    { wch: 10 }, { wch: 12 }, { wch: 10 }, { wch: 12 },
-    { wch: 12 }, { wch: 5 }, { wch: 20 }, { wch: 40 },
-    { wch: 10 }, { wch: 8 }, { wch: 40 }, { wch: 40 }, { wch: 18 }
-  ];
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "調査結果");
-  const criteria = [
-    { "判定基準": "【スコアリング対象】", "加点": "" },
-    { "判定基準": "所在階 4F以上", "加点": "+2" },
-    { "判定基準": "所在階 2〜3F", "加点": "+1" },
-    { "判定基準": "飲放付コース 2,000円未満", "加点": "+2" },
-    { "判定基準": "飲放付コース 3,300円未満", "加点": "+1" },
-    { "判定基準": "口コミに「キャッチ/ぼったくり」3件以上", "加点": "+3" },
-    { "判定基準": "口コミに「キャッチ/ぼったくり」1〜2件", "加点": "+2" },
-    { "判定基準": "同住所に別店舗あり", "加点": "+1" },
-    { "判定基準": "SEO的冠語（個室/完全個室等）", "加点": "+1" },
-    { "判定基準": "Gマップ ★3.5以下", "加点": "+1" },
-    {},
-    { "判定基準": "【参考情報（スコア非加算）】", "加点": "" },
-    { "判定基準": "食べログ↔Gマップ評点乖離", "加点": "参考" },
-    { "判定基準": "食べログ低評価（3.02以下）", "加点": "参考" },
-    { "判定基準": "Gマップ口コミ数異常（500件超×食べログ3.1未満）", "加点": "参考" },
-    {},
-    { "判定基準": "最大スコア: 10点（100%換算）", "加点": "" },
-    { "判定基準": "■ 70〜100: 危険  ■ 45〜69: 要注意  ■ 25〜44: やや注意  ■ 0〜24: 低リスク" },
-  ];
-  const ws2 = XLSX.utils.json_to_sheet(criteria);
-  ws2["!cols"] = [{ wch: 50 }, { wch: 8 }];
-  XLSX.utils.book_append_sheet(wb, ws2, "スコアリング基準");
-  XLSX.writeFile(wb, `キャッチ調査_${new Date().toISOString().slice(0,10)}.xlsx`);
-}
 
 /* ─── Tab Button ─── */
 function TabBtn({ active, children, onClick }) {
@@ -216,39 +164,37 @@ function TabBtn({ active, children, onClick }) {
 /* ─── Main App ─── */
 function LiveCatchRiskApp() {
   const [query, setQuery] = useState("");
-  const [area, setArea] = useState("");
+  const [area, setArea] = useState("金沢片町エリア");
+  const [apiKey, setApiKey] = useState(() => {
+    try { return localStorage.getItem("catch-risk-apikey") || ""; } catch(e) { return ""; }
+  });
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState("");
   const [results, setResults] = useState([]);
   const [expandedIdx, setExpandedIdx] = useState(null);
   const [error, setError] = useState(null);
   const [view, setView] = useState("cards");
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [showPwModal, setShowPwModal] = useState(false);
-  const [pwInput, setPwInput] = useState("");
-  const [pwError, setPwError] = useState(false);
   const [pendingResult, setPendingResult] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
-  const ADMIN_PW = "mma";
 
   useEffect(() => {
     setResults(loadSharedResults());
   }, []);
 
-  function handlePwSubmit() {
-    if (pwInput === ADMIN_PW) {
-      setIsAdmin(true); setShowPwModal(false); setPwInput(""); setPwError(false);
-    } else { setPwError(true); }
-  }
 
   async function doSearch() {
     if (!query.trim()) return;
+    if (!apiKey.trim()) { setError("APIキーを入力してください（画面上部の🔑欄）"); return; }
     setLoading(true); setError(null); setPendingResult(null); setShowConfirm(false);
     setProgress("ウェブ検索を実行中…ホットペッパー・Googleマップ・口コミを調査しています");
     try {
       const resp = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey.trim(),
+          "anthropic-version": "2023-06-01"
+        },
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
           max_tokens: 2000,
@@ -336,12 +282,6 @@ function LiveCatchRiskApp() {
     setShowConfirm(false);
   }
 
-  function removeResult(idx) {
-    const updated = results.filter((_, i) => i !== idx);
-    setResults(updated);
-    if (expandedIdx === idx) setExpandedIdx(null);
-    saveSharedResults(updated);
-  }
 
   const dangerCount = results.filter(r => calcFromData(r).pct >= 70).length;
   const cautionCount = results.filter(r => calcFromData(r).pct >= 45 && calcFromData(r).pct < 70).length;
@@ -367,24 +307,9 @@ function LiveCatchRiskApp() {
             margin: 0, fontSize: 24, fontWeight: 800, lineHeight: 1.3,
             background: "linear-gradient(135deg, #F1F5F9 0%, #94A3B8 100%)",
             WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent"
-          }}>キャッチ居酒屋可能性指数</h1>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" }}>
-            <p style={{ margin: "4px 0 0", fontSize: 13, color: "#64748B" }}>Catch Izakaya Risk Index — v0.7</p>
-            {!isAdmin ? (
-              <button onClick={() => setShowPwModal(true)} style={{
-                background: "transparent", border: "1px solid #1E293B", borderRadius: 8,
-                color: "#475569", fontSize: 12, padding: "4px 12px", cursor: "pointer",
-                display: "flex", alignItems: "center", gap: 4
-              }}>🔒 管理者</button>
-            ) : (
-              <span style={{ fontSize: 12, color: "#16A34A", display: "flex", alignItems: "center", gap: 4 }}>
-                🔓 管理者モード
-                <button onClick={() => setIsAdmin(false)} style={{
-                  background: "transparent", border: "none", color: "#475569",
-                  fontSize: 11, cursor: "pointer", textDecoration: "underline", marginLeft: 4
-                }}>ログアウト</button>
-              </span>
-            )}
+          }}>金沢片町 キャッチ居酒屋指数</h1>
+          <div>
+            <p style={{ margin: "4px 0 0", fontSize: 13, color: "#64748B" }}>Catch Izakaya Risk Index — リアルタイム版 v0.7</p>
           </div>
           <p style={{ margin: "10px 0 0", fontSize: 11, color: "#475569", lineHeight: 1.8 }}>
             本ツールの調査対象は「酒類の提供を主とし、飲み放題付きコースを提供する飲食店」（居酒屋型飲食店）です。
@@ -394,6 +319,35 @@ function LiveCatchRiskApp() {
       </div>
 
       <div style={{ maxWidth: 960, margin: "0 auto", padding: "24px 20px 0" }}>
+        {/* API Key Input */}
+        {!apiKey.trim() && (
+          <div style={{
+            background: "#0F172A", border: "1px solid #CA8A04", borderRadius: 14, padding: "16px 20px", marginBottom: 16
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+              <span style={{ fontSize: 16 }}>🔑</span>
+              <span style={{ fontSize: 13, color: "#CA8A04", fontWeight: 700 }}>APIキーを入力してください</span>
+            </div>
+            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+              <input type="password" placeholder="sk-ant-api03-..."
+                onChange={e => {
+                  const v = e.target.value;
+                  setApiKey(v);
+                  try { localStorage.setItem("catch-risk-apikey", v); } catch(e) {}
+                }}
+                style={{ flex: 1, background: "#020617", border: "1px solid #1E293B", borderRadius: 10, padding: "10px 14px", color: "#F1F5F9", fontSize: 13, outline: "none", fontFamily: "monospace" }} />
+            </div>
+            <p style={{ margin: "8px 0 0", fontSize: 11, color: "#475569" }}>キーはこのブラウザにのみ保存され、外部には送信されません（Anthropic APIへの通信のみに使用）</p>
+          </div>
+        )}
+        {apiKey.trim() && (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+            <span style={{ fontSize: 12, color: "#065F46", display: "flex", alignItems: "center", gap: 4 }}>🔑 APIキー設定済み</span>
+            <button onClick={() => { setApiKey(""); try { localStorage.removeItem("catch-risk-apikey"); } catch(e) {} }} style={{
+              background: "transparent", border: "none", color: "#475569", fontSize: 11, cursor: "pointer", textDecoration: "underline"
+            }}>キーを変更</button>
+          </div>
+        )}
         {/* Search Box */}
         <div style={{
           display: "flex", gap: 10, marginBottom: 12,
@@ -407,7 +361,7 @@ function LiveCatchRiskApp() {
           <div style={{ width: 1, height: 24, background: "#1E293B", flexShrink: 0 }} />
           <input type="text" value={area} onChange={e => setArea(e.target.value)}
             onKeyDown={e => e.key === "Enter" && !loading && doSearch()}
-            placeholder="エリア（例：歌舞伎町）" disabled={loading}
+            placeholder="エリア（変更可）" disabled={loading}
             style={{ flex: "1 1 120px", background: "transparent", border: "none", outline: "none", color: "#94A3B8", fontSize: 14, padding: "10px 14px", fontFamily: "'Noto Sans JP', sans-serif", minWidth: 0 }} />
           <button onClick={doSearch} disabled={loading || !query.trim()} style={{
             background: loading ? "#1E293B" : "#DC2626", color: "#fff", border: "none",
@@ -424,7 +378,7 @@ function LiveCatchRiskApp() {
         }}>
           <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>🔐</span>
           <p style={{ margin: 0, fontSize: 11, color: "#64748B", lineHeight: 1.7 }}>
-            本ツールは入力された店名および公開グルメサイトから取得した評点・口コミ情報のみを記録します。利用者の個人情報は一切収集されません。調査結果はブラウザ内に保存され、管理者のみExcelダウンロードが可能です。
+            本ツールは入力された店名および公開グルメサイトから取得した評点・口コミ情報のみを記録します。利用者の個人情報は一切収集されません。調査結果はGoogleスプレッドシートに自動集約されます。
           </p>
         </div>
 
@@ -438,9 +392,9 @@ function LiveCatchRiskApp() {
         )}
         {error && <div style={{ background: "#1a0505", border: "1px solid #7F1D1D", borderRadius: 14, padding: "16px 20px", marginBottom: 20, color: "#FCA5A5", fontSize: 13 }}>{error}</div>}
 
-        {/* View Toggle + Export */}
+        {/* View Toggle */}
         {results.length > 0 && (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
               <TabBtn active={view === "cards"} onClick={() => setView("cards")}>カード表示</TabBtn>
               <TabBtn active={view === "table"} onClick={() => setView("table")}>一覧表示</TabBtn>
@@ -450,17 +404,6 @@ function LiveCatchRiskApp() {
                 {cautionCount > 0 && <span style={{ color: "#EA580C", marginLeft: 4 }}>（要注意{cautionCount}）</span>}
               </span>
             </div>
-            {isAdmin && (
-              <button onClick={() => exportToExcel(results)} style={{
-                background: "linear-gradient(135deg, #065F46 0%, #047857 100%)",
-                color: "#fff", border: "none", borderRadius: 10,
-                padding: "8px 20px", fontSize: 13, fontWeight: 700,
-                cursor: "pointer", fontFamily: "'Noto Sans JP', sans-serif",
-                display: "flex", alignItems: "center", gap: 6, transition: "all 0.2s"
-              }}>
-                <span style={{ fontSize: 16 }}>📥</span> Excelダウンロード（{results.length}件）
-              </button>
-            )}
           </div>
         )}
 
@@ -478,12 +421,7 @@ function LiveCatchRiskApp() {
               <div style={{ display: "flex", alignItems: "center", gap: 20, cursor: "pointer" }} onClick={() => setExpandedIdx(expanded ? null : idx)}>
                 <RiskMeter pct={risk.pct} color={risk.color} level={risk.level} size={window.innerWidth < 480 ? 80 : 120} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
                     <h3 style={{ margin: 0, fontSize: window.innerWidth < 480 ? 14 : 17, fontWeight: 700, color: "#F1F5F9", lineHeight: 1.4 }}>{r.shopName}</h3>
-                    {isAdmin && <button onClick={e => { e.stopPropagation(); removeResult(idx); }} title="削除" style={{
-                      background: "transparent", border: "none", color: "#334155", cursor: "pointer",
-                      fontSize: 16, padding: "2px 6px", borderRadius: 4, flexShrink: 0
-                    }}>✕</button>}
                   </div>
                   <p style={{ margin: "4px 0 0", fontSize: 12, color: "#64748B", wordBreak: "break-all" }}>{r.address}{r.area ? <span style={{ marginLeft: 8, background: "#1E293B", color: "#94A3B8", padding: "2px 8px", borderRadius: 10, fontSize: 11 }}>{r.area}</span> : null}</p>
                   <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
@@ -598,8 +536,8 @@ function LiveCatchRiskApp() {
         </div>
 
         <div style={{ marginTop: 24, textAlign: "center", fontSize: 11, color: "#334155", lineHeight: 1.8 }}>
-          <p>客引き問題調査ツール ─ 北陸大学 山本研究室</p>
-          <p>v0.7 ─ 調査データに基づく参考指標です</p>
+          <p>金沢市片町 客引き問題調査 ─ 北陸大学 山本研究室</p>
+          <p>リアルタイム検索版 v0.7 ─ 調査データに基づく参考指標です</p>
         </div>
       </div>
 
@@ -638,41 +576,6 @@ function LiveCatchRiskApp() {
         </div>
       )}
 
-      {/* Password Modal */}
-      {showPwModal && (
-        <div style={{
-          position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)",
-          display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: 20
-        }} onClick={() => { setShowPwModal(false); setPwInput(""); setPwError(false); }}>
-          <div onClick={e => e.stopPropagation()} style={{
-            background: "#0F172A", border: "1px solid #1E293B", borderRadius: 16,
-            padding: "32px 28px", maxWidth: 320, width: "100%", boxShadow: "0 20px 60px rgba(0,0,0,0.5)"
-          }}>
-            <h3 style={{ margin: "0 0 6px", fontSize: 16, color: "#F1F5F9", fontWeight: 700 }}>🔒 管理者認証</h3>
-            <p style={{ margin: "0 0 20px", fontSize: 12, color: "#64748B" }}>パスワードを入力してください</p>
-            <input type="password" value={pwInput}
-              onChange={e => { setPwInput(e.target.value); setPwError(false); }}
-              onKeyDown={e => e.key === "Enter" && handlePwSubmit()}
-              autoFocus placeholder="パスワード"
-              style={{
-                width: "100%", background: "#020617", border: `1px solid ${pwError ? "#DC2626" : "#1E293B"}`,
-                borderRadius: 10, padding: "10px 14px", color: "#F1F5F9", fontSize: 14,
-                outline: "none", fontFamily: "'Noto Sans JP', sans-serif", boxSizing: "border-box"
-              }} />
-            {pwError && <p style={{ color: "#FCA5A5", fontSize: 12, margin: "8px 0 0" }}>パスワードが違います</p>}
-            <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
-              <button onClick={() => { setShowPwModal(false); setPwInput(""); setPwError(false); }} style={{
-                flex: 1, background: "#1E293B", color: "#94A3B8", border: "none",
-                borderRadius: 10, padding: "10px", fontSize: 13, cursor: "pointer"
-              }}>キャンセル</button>
-              <button onClick={handlePwSubmit} style={{
-                flex: 1, background: "#DC2626", color: "#fff", border: "none",
-                borderRadius: 10, padding: "10px", fontSize: 13, fontWeight: 700, cursor: "pointer"
-              }}>認証</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
