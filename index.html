@@ -1,586 +1,462 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>金沢片町 キャッチ居酒屋指数 — Catch Izakaya Risk Index</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>金沢片町 キャッチ居酒屋指数</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: #020617; }
-@keyframes spin { to { transform: rotate(360deg); } }
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:linear-gradient(180deg,#020617 0%,#0F172A 40%,#020617 100%);color:#F1F5F9;font-family:'Noto Sans JP',sans-serif;min-height:100vh}
+@keyframes spin{to{transform:rotate(360deg)}}
+.wrap{max-width:960px;margin:0 auto;padding:24px 20px 60px}
+.header{padding:36px 20px 28px;background:linear-gradient(180deg,rgba(220,38,38,0.08) 0%,transparent 100%);border-bottom:1px solid #1E293B}
+.header-inner{max-width:960px;margin:0 auto}
+h1{font-size:24px;font-weight:800;line-height:1.3;background:linear-gradient(135deg,#F1F5F9 0%,#94A3B8 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.subtitle{margin:4px 0 0;font-size:13px;color:#64748B}
+.definition{margin:10px 0 0;font-size:11px;color:#475569;line-height:1.8}
+.badge{background:#DC2626;color:#fff;padding:3px 12px;border-radius:6px;font-size:10px;font-weight:700;letter-spacing:1.5px}
+.apibox{background:#0F172A;border:1px solid #CA8A04;border-radius:14px;padding:16px 20px;margin-bottom:16px}
+.apibox input{width:100%;background:#020617;border:1px solid #1E293B;border-radius:10px;padding:10px 14px;color:#F1F5F9;font-size:13px;outline:none;font-family:monospace;margin-top:8px;box-sizing:border-box}
+.api-ok{font-size:12px;color:#065F46;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.api-ok button{background:none;border:none;color:#475569;font-size:11px;cursor:pointer;text-decoration:underline}
+.searchbox{display:flex;gap:10px;margin-bottom:12px;background:#0F172A;border:1px solid #1E293B;border-radius:14px;padding:8px;align-items:center;flex-wrap:wrap}
+.searchbox input{background:transparent;border:none;outline:none;color:#F1F5F9;font-size:15px;padding:10px 14px;font-family:'Noto Sans JP',sans-serif;min-width:0}
+.q-input{flex:2 1 180px}
+.a-input{flex:1 1 120px;color:#94A3B8 !important;font-size:14px !important}
+.divider{width:1px;height:24px;background:#1E293B;flex-shrink:0}
+.btn-search{background:#DC2626;color:#fff;border:none;border-radius:10px;padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.2s;font-family:'Noto Sans JP',sans-serif;white-space:nowrap}
+.btn-search:disabled{background:#1E293B;cursor:wait;opacity:0.7}
+.privacy{display:flex;align-items:flex-start;gap:8px;margin-bottom:20px;background:#0F172A;border:1px solid #1E293B;border-radius:10px;padding:10px 14px}
+.privacy p{font-size:11px;color:#64748B;line-height:1.7}
+.loading{background:#0F172A;border:1px solid #1E293B;border-radius:14px;padding:20px 24px;margin-bottom:20px;text-align:center}
+.spinner{width:40px;height:40px;border:3px solid #1E293B;border-top-color:#DC2626;border-radius:50%;margin:0 auto 14px;animation:spin 1s linear infinite}
+.error-box{background:#1a0505;border:1px solid #7F1D1D;border-radius:14px;padding:16px 20px;margin-bottom:20px;color:#FCA5A5;font-size:13px}
+.card{border-radius:16px;padding:20px 24px;margin-bottom:12px;transition:all 0.3s;cursor:pointer}
+.card-header{display:flex;align-items:center;gap:20px}
+.card h3{font-size:17px;font-weight:700;color:#F1F5F9;line-height:1.4;margin:0}
+.card .addr{margin:4px 0 0;font-size:12px;color:#64748B;word-break:break-all}
+.tags{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.tag{padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;display:inline-block}
+.ts{margin:4px 0 0;font-size:10px;color:#334155}
+.detail{margin-top:20px;padding-top:16px;border-top:1px solid #1E293B}
+.summary-box{background:#1E293B;padding:12px 16px;border-radius:10px;font-size:13px;color:#CBD5E1;line-height:1.7;margin:0 0 16px}
+.factor{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px}
+.fw{padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap;min-width:28px;text-align:center;color:#fff}
+.kw-item{background:#1E293B;border-left:3px solid #DC2626;padding:8px 12px;margin-bottom:6px;border-radius:0 8px 8px 0;color:#CBD5E1;font-size:12px;font-style:italic;line-height:1.5}
+.same-addr-box{margin-top:12px;background:#1E293B;padding:10px 14px;border-radius:10px;font-size:12px;color:#FDBA74}
+.meter{position:relative;flex-shrink:0}
+.meter-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.legend{margin-top:32px;background:#0F172A;border:1px solid #1E293B;border-radius:16px;padding:20px 24px}
+.legend h4{margin:0 0 14px;font-size:14px;color:#F1F5F9;font-weight:700}
+.legend-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;font-size:11px;color:#94A3B8;line-height:1.8}
+.legend-levels{margin-top:14px;display:flex;gap:14px;font-size:11px;flex-wrap:wrap}
+.footer{margin-top:24px;text-align:center;font-size:11px;color:#334155;line-height:1.8}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:9998;padding:20px}
+.modal{background:#0F172A;border:1px solid #1E293B;border-radius:16px;padding:32px 28px;max-width:380px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+.modal h3{margin:0 0 6px;font-size:16px;color:#F1F5F9;font-weight:700}
+.modal-detail{background:#020617;border:1px solid #1E293B;border-radius:12px;padding:16px;margin-bottom:20px}
+.modal-btns{display:flex;gap:10px}
+.modal-btns button{flex:1;border:none;border-radius:10px;padding:12px;font-size:13px;cursor:pointer;font-family:'Noto Sans JP',sans-serif}
+.area-badge{margin-left:8px;background:#1E293B;color:#94A3B8;padding:2px 8px;border-radius:10px;font-size:11px;display:inline-block}
+.stats{font-size:12px;color:#475569;margin-bottom:16px}
+.empty{text-align:center;padding:48px 20px;color:#334155}
+.hidden{display:none}
+@media(max-width:480px){
+  .card h3{font-size:14px}
+  .legend-grid{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
-<div id="root"></div>
-<script type="text/babel">
-const { useState, useEffect, useCallback } = React;
 
-/* ─── Risk Meter ─── */
-function RiskMeter({ pct, color, level, size = 120 }) {
-  const [animPct, setAnimPct] = useState(0);
-  useEffect(() => { const t = setTimeout(() => setAnimPct(pct), 150); return () => clearTimeout(t); }, [pct]);
-  const r = (size - 16) / 2, circ = 2 * Math.PI * r;
-  return (
-    <div style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
-      <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size}>
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="#1E293B" strokeWidth="8" />
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth="8"
-          strokeDasharray={`${(animPct/100)*circ} ${circ}`} strokeLinecap="round"
-          transform={`rotate(-90 ${size/2} ${size/2})`}
-          style={{ transition: "stroke-dasharray 1.2s cubic-bezier(.4,0,.2,1)" }} />
-      </svg>
-      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-        <span style={{ fontSize: size*0.23, fontWeight: 800, color, fontFamily: "'DM Mono', monospace" }}>{animPct}</span>
-        <span style={{ fontSize: size*0.085, color: "#94A3B8", letterSpacing: 1 }}>{level}</span>
-      </div>
+<div class="header">
+  <div class="header-inner">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+      <span style="font-size:26px">🔍</span>
+      <span class="badge">LIVE SEARCH</span>
     </div>
-  );
-}
+    <h1>金沢片町 キャッチ居酒屋指数</h1>
+    <p class="subtitle">Catch Izakaya Risk Index — リアルタイム版 v0.7</p>
+    <p class="definition">本ツールの調査対象は「酒類の提供を主とし、飲み放題付きコースを提供する飲食店」（居酒屋型飲食店）です。店名に「居酒屋」を含まない業態（海鮮ダイニング・個室和食等）も、上記の要件を満たす場合は対象となります。</p>
+  </div>
+</div>
 
-/* ─── Score Calculation ─── */
+<div class="wrap">
+  <div id="apiSection"></div>
+
+  <div class="searchbox">
+    <input type="text" id="queryInput" class="q-input" placeholder="店名（例：○○居酒屋）">
+    <div class="divider"></div>
+    <input type="text" id="areaInput" class="a-input" placeholder="エリア（変更可）" value="金沢片町エリア">
+    <button class="btn-search" id="searchBtn">調査開始</button>
+  </div>
+
+  <div class="privacy">
+    <span style="font-size:14px;flex-shrink:0;margin-top:1px">🔐</span>
+    <p>本ツールは入力された店名および公開グルメサイトから取得した評点・口コミ情報のみを記録します。利用者の個人情報は一切収集されません。調査結果はGoogleスプレッドシートに自動集約されます。</p>
+  </div>
+
+  <div id="loadingArea" class="hidden"></div>
+  <div id="errorArea" class="hidden"></div>
+  <div id="statsArea" class="hidden"></div>
+  <div id="resultsArea"></div>
+  <div id="emptyState"></div>
+
+  <div class="legend">
+    <h4>スコアリング基準</h4>
+    <div class="legend-grid">
+      <div>• 所在階4F以上 → +2 / 2-3F → +1</div>
+      <div>• 飲放付2,000円未満 → +2 / 3,300円未満 → +1</div>
+      <div>• 口コミ「キャッチ/ぼったくり」3件超 → +3</div>
+      <div>• 口コミ「キャッチ/ぼったくり」1-2件 → +2</div>
+      <div>• 同住所に別店舗 → +1</div>
+      <div>• SEO的冠語（個室/完全個室等）→ +1</div>
+      <div>• Gマップ★3.5以下 → +1</div>
+      <div style="color:#475569">※ 食べログ評点は参考表示（スコア非加算）</div>
+    </div>
+    <div class="legend-levels">
+      <span><span style="color:#DC2626;font-weight:700">■ 70〜100</span> 危険</span>
+      <span><span style="color:#EA580C;font-weight:700">■ 45〜69</span> 要注意</span>
+      <span><span style="color:#CA8A04;font-weight:700">■ 25〜44</span> やや注意</span>
+      <span><span style="color:#16A34A;font-weight:700">■ 0〜24</span> 低リスク</span>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>金沢市片町 客引き問題調査 ─ 北陸大学 山本研究室</p>
+    <p>リアルタイム検索版 v0.7 ─ 調査データに基づく参考指標です</p>
+  </div>
+</div>
+
+<div id="confirmOverlay" class="overlay hidden"></div>
+
+<script>
+/* ── Config ── */
+var SHEET_URL = "https://script.google.com/macros/s/AKfycbxnZEpb_L_nLHRx3Iwn4L-gWQG6c1qdseRf0-MrW8VLIdlI8ZZKSfMY0dImEnDA1wB0/exec";
+
+var SYSTEM_PROMPT = 'あなたは飲食店の客引き・ぼったくりリスクを調査するアシスタントです。\nウェブ検索を使って以下の情報を収集し、JSON形式のみで回答してください。\nマークダウンのバッククォートは不要です。\n\n【必須検索】\n検索1: 「(店名) ホットペッパー」→ 住所・階数・飲み放題付きコース最安価格・同ビル内の別店舗を確認\n検索2: 「(店名) キャッチ ぼったくり 口コミ」→ キャッチ・客引き・ぼったくりに関する口コミを検索\n検索3: 「(店名) Googleマップ 口コミ 評価」→ Gマップの星評価・口コミ件数を取得\n\n検索結果に食べログの情報が含まれていた場合は、評点と口コミ数も記録してください（専用の検索は不要）。\n\n回答はJSON形式のみ。\n\n{\n  "shopName": "正式店名",\n  "address": "住所（ビル名・階数を含む）",\n  "floor": "階数の数値（B1Fなら-1、1Fならnull、不明ならnull）",\n  "tabelog": "食べログ評点（なければnull）",\n  "tabelogCount": "食べログ口コミ件数（なければnull）",\n  "gmap": "Googleマップ星評価（不明ならnull）",\n  "gmapCount": "Googleマップ口コミ件数（不明ならnull）",\n  "cheapCourse": "最安の飲み放題付きコース価格（不明ならnull）",\n  "crownName": "店名にSEO冠語があるか（true/false）",\n  "sameAddress": "同じビルの別飲食店名（なければnull）",\n  "catchKeywords": "キャッチ関連の口コミ（配列、最大5件）",\n  "summary": "特記事項（1〜2文）"\n}';
+
+/* ── State ── */
+var results = [];
+var expandedIdx = null;
+var pendingResult = null;
+var apiKey = "";
+try { apiKey = localStorage.getItem("catch-risk-apikey") || ""; } catch(e) {}
+try { var saved = localStorage.getItem("catch-risk-results"); if (saved) results = JSON.parse(saved); } catch(e) {}
+
+/* ── Score Calculation ── */
 function calcFromData(d) {
-  const factors = []; let score = 0;
-  if (d.floor != null && d.floor >= 4) { factors.push({ l: "空中階（高層）", det: `${d.floor}F`, w: 2 }); score += 2; }
-  else if (d.floor != null && d.floor >= 2) { factors.push({ l: "空中階", det: `${d.floor}F`, w: 1 }); score += 1; }
-  if (d.cheapCourse != null && d.cheapCourse < 2000) { factors.push({ l: "非現実的低価格", det: `飲放付${d.cheapCourse}円`, w: 2 }); score += 2; }
-  else if (d.cheapCourse != null && d.cheapCourse < 3300) { factors.push({ l: "低価格コース", det: `${d.cheapCourse}円`, w: 1 }); score += 1; }
-  if (d.catchKeywords && d.catchKeywords.length >= 3) { factors.push({ l: "「キャッチ/ぼったくり」多数", det: `${d.catchKeywords.length}件検出`, w: 3 }); score += 3; }
-  else if (d.catchKeywords && d.catchKeywords.length > 0) { factors.push({ l: "「キャッチ/ぼったくり」検出", det: `${d.catchKeywords.length}件`, w: 2 }); score += 2; }
-  if (d.sameAddress) { factors.push({ l: "同住所に別店舗", det: d.sameAddress, w: 1 }); score += 1; }
-  if (d.crownName) { factors.push({ l: "SEO的冠語パターン", det: "「個室」「完全個室」等を店名に使用", w: 1 }); score += 1; }
-  if (d.gmap != null && d.gmap <= 3.5) { factors.push({ l: "Gマップ低評価", det: `★${d.gmap}`, w: 1 }); score += 1; }
-  if (d.tabelog != null && d.gmap != null) {
-    const diff = d.gmap - d.tabelog;
-    if (diff >= 0.7) { factors.push({ l: "【参考】評点乖離", det: `Gマップ★${d.gmap} vs 食べログ${d.tabelog}（差${diff.toFixed(1)}）`, w: 0 }); }
+  var factors = [], score = 0;
+  if (d.floor != null && d.floor >= 4) { factors.push({l:"空中階（高層）",det:d.floor+"F",w:2}); score+=2; }
+  else if (d.floor != null && d.floor >= 2) { factors.push({l:"空中階",det:d.floor+"F",w:1}); score+=1; }
+  if (d.cheapCourse != null && d.cheapCourse < 2000) { factors.push({l:"非現実的低価格",det:"飲放付"+d.cheapCourse+"円",w:2}); score+=2; }
+  else if (d.cheapCourse != null && d.cheapCourse < 3300) { factors.push({l:"低価格コース",det:d.cheapCourse+"円",w:1}); score+=1; }
+  if (d.catchKeywords && d.catchKeywords.length >= 3) { factors.push({l:"「キャッチ/ぼったくり」多数",det:d.catchKeywords.length+"件検出",w:3}); score+=3; }
+  else if (d.catchKeywords && d.catchKeywords.length > 0) { factors.push({l:"「キャッチ/ぼったくり」検出",det:d.catchKeywords.length+"件",w:2}); score+=2; }
+  if (d.sameAddress) { factors.push({l:"同住所に別店舗",det:d.sameAddress,w:1}); score+=1; }
+  if (d.crownName) { factors.push({l:"SEO的冠語パターン",det:"「個室」「完全個室」等を店名に使用",w:1}); score+=1; }
+  if (d.gmap != null && d.gmap <= 3.5) { factors.push({l:"Gマップ低評価",det:"★"+d.gmap,w:1}); score+=1; }
+  if (d.tabelog != null && d.gmap != null && (d.gmap-d.tabelog)>=0.7) {
+    factors.push({l:"【参考】評点乖離",det:"Gマップ★"+d.gmap+" vs 食べログ"+d.tabelog+"（差"+(d.gmap-d.tabelog).toFixed(1)+"）",w:0});
   }
-  if (d.tabelog != null && d.tabelog <= 3.02) { factors.push({ l: "【参考】食べログ低評価", det: `${d.tabelog}`, w: 0 }); }
+  if (d.tabelog != null && d.tabelog <= 3.02) { factors.push({l:"【参考】食べログ低評価",det:""+d.tabelog,w:0}); }
   if (d.gmapCount >= 500 && (d.tabelog == null || d.tabelog < 3.1)) {
-    factors.push({ l: "【参考】口コミ数の異常", det: `Gマップ${d.gmapCount}件 × 食べログ${d.tabelog ?? "未掲載"}`, w: 0 });
+    factors.push({l:"【参考】口コミ数の異常",det:"Gマップ"+d.gmapCount+"件 × 食べログ"+(d.tabelog!=null?d.tabelog:"未掲載"),w:0});
   }
-  const maxScore = 10;
-  const pct = Math.min(Math.round((score / maxScore) * 100), 100);
-  const level = pct >= 70 ? "危険" : pct >= 45 ? "要注意" : pct >= 25 ? "やや注意" : "低リスク";
-  const color = pct >= 70 ? "#DC2626" : pct >= 45 ? "#EA580C" : pct >= 25 ? "#CA8A04" : "#16A34A";
-  return { score, pct, level, color, factors };
+  var pct = Math.min(Math.round((score/10)*100),100);
+  var level = pct>=70?"危険":pct>=45?"要注意":pct>=25?"やや注意":"低リスク";
+  var color = pct>=70?"#DC2626":pct>=45?"#EA580C":pct>=25?"#CA8A04":"#16A34A";
+  return {score:score,pct:pct,level:level,color:color,factors:factors};
 }
 
-/* ─── System Prompt ─── */
-const SYSTEM_PROMPT = `あなたは飲食店の客引き・ぼったくりリスクを調査するアシスタントです。
-ウェブ検索を使って以下の情報を収集し、JSON形式のみで回答してください。
-マークダウンのバッククォートは不要です。
+/* ── Helpers ── */
+function esc(s) { if (!s) return ""; var d=document.createElement("div"); d.textContent=s; return d.innerHTML; }
 
-【必須検索】
-検索1: 「(店名) ホットペッパー」→ 住所・階数・飲み放題付きコース最安価格・同ビル内の別店舗を確認
-検索2: 「(店名) キャッチ ぼったくり 口コミ」→ キャッチ・客引き・ぼったくりに関する口コミを検索
-検索3: 「(店名) Googleマップ 口コミ 評価」→ Gマップの星評価・口コミ件数を取得
-
-検索結果に食べログの情報が含まれていた場合は、評点と口コミ数も記録してください（専用の検索は不要）。
-
-回答はJSON形式のみ。
-
-{
-  "shopName": "正式店名",
-  "address": "住所（ビル名・階数を含む）",
-  "floor": 階数の数値（B1Fなら-1、1Fならnull、不明ならnull）,
-  "tabelog": 食べログ評点（検索結果に含まれていた場合のみ、なければnull）,
-  "tabelogCount": 食べログ口コミ件数（同上、なければnull）,
-  "gmap": Googleマップ星評価（数値、不明ならnull）,
-  "gmapCount": Googleマップ口コミ件数（数値、不明ならnull）,
-  "cheapCourse": 最安の飲み放題付きコース価格（数値、不明ならnull）,
-  "crownName": 店名に「個室」「居酒屋」「完全個室」等のSEO冠語があるか（true/false）,
-  "sameAddress": 同じビル・住所にある別の飲食店名（文字列、なければnull）,
-  "catchKeywords": 「キャッチ/客引き/ぼったくり/rip-off」関連の口コミ（配列、最大5件）,
-  "summary": 特記事項（1〜2文）
-}`;
-
-/* ─── Local Storage helpers ─── */
-const STORAGE_KEY = "catch-risk-results";
-
-function loadSharedResults() {
-  try {
-    const data = localStorage.getItem(STORAGE_KEY);
-    if (data) return JSON.parse(data);
-  } catch (e) { console.error("Load error:", e); }
-  return [];
+function meterSVG(pct,color,level,size) {
+  var r=(size-16)/2, circ=2*Math.PI*r;
+  return '<div class="meter" style="width:'+size+'px;height:'+size+'px">'+
+    '<svg viewBox="0 0 '+size+' '+size+'" width="'+size+'" height="'+size+'">'+
+    '<circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="#1E293B" stroke-width="8"/>'+
+    '<circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="'+color+'" stroke-width="8" '+
+    'stroke-dasharray="'+(pct/100*circ)+' '+circ+'" stroke-linecap="round" '+
+    'transform="rotate(-90 '+size/2+' '+size/2+')"/>'+
+    '</svg>'+
+    '<div class="meter-inner">'+
+    '<span style="font-size:'+(size*0.23)+'px;font-weight:800;color:'+color+';font-family:DM Mono,monospace">'+pct+'</span>'+
+    '<span style="font-size:'+(size*0.085)+'px;color:#94A3B8;letter-spacing:1px">'+level+'</span>'+
+    '</div></div>';
 }
 
-function saveSharedResults(results) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(results));
-  } catch (e) { console.error("Save error:", e); }
+function saveResults() {
+  try { localStorage.setItem("catch-risk-results", JSON.stringify(results)); } catch(e) {}
 }
 
-/* ─── Google Sheets Integration ─── */
-const SHEET_URL = "https://script.google.com/macros/s/AKfycbxnZEpb_L_nLHRx3Iwn4L-gWQG6c1qdseRf0-MrW8VLIdlI8ZZKSfMY0dImEnDA1wB0/exec";
-
-function sendToSheet(result, riskData) {
+function sendToSheet(result, risk) {
   try {
-    fetch(SHEET_URL, {
-      method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        timestamp: result.timestamp,
-        shopName: result.shopName,
-        area: result.area,
-        address: result.address,
-        floor: result.floor,
-        tabelog: result.tabelog,
-        tabelogCount: result.tabelogCount,
-        gmap: result.gmap,
-        gmapCount: result.gmapCount,
-        cheapCourse: result.cheapCourse,
-        crownName: result.crownName,
-        sameAddress: result.sameAddress,
-        catchKeywords: result.catchKeywords,
-        riskPct: riskData.pct,
-        riskLevel: riskData.level,
-        riskFactors: riskData.factors.map(f => `${f.l}(+${f.w})`).join(", "),
-        summary: result.summary
+    fetch(SHEET_URL, {method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        timestamp:result.timestamp, shopName:result.shopName, area:result.area,
+        address:result.address, floor:result.floor, tabelog:result.tabelog,
+        tabelogCount:result.tabelogCount, gmap:result.gmap, gmapCount:result.gmapCount,
+        cheapCourse:result.cheapCourse, crownName:result.crownName, sameAddress:result.sameAddress,
+        catchKeywords:result.catchKeywords, riskPct:risk.pct, riskLevel:risk.level,
+        riskFactors:risk.factors.map(function(f){return f.l+"(+"+f.w+")"}).join(", "),
+        summary:result.summary
       })
     });
-  } catch (e) { console.error("Sheet send error:", e); }
+  } catch(e) { console.error("Sheet error:",e); }
 }
 
-
-/* ─── Tab Button ─── */
-function TabBtn({ active, children, onClick }) {
-  return (
-    <button onClick={onClick} style={{
-      background: active ? "#1E293B" : "transparent",
-      border: `1px solid ${active ? "#475569" : "#1E293B"}`,
-      color: active ? "#F1F5F9" : "#475569",
-      padding: "6px 18px", borderRadius: 20, fontSize: 13,
-      cursor: "pointer", fontWeight: active ? 700 : 400,
-      transition: "all 0.2s", fontFamily: "'Noto Sans JP', sans-serif"
-    }}>{children}</button>
-  );
+/* ── API Key UI ── */
+function renderApiSection() {
+  var el = document.getElementById("apiSection");
+  if (!apiKey.trim()) {
+    el.innerHTML = '<div class="apibox">'+
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'+
+      '<span style="font-size:16px">🔑</span>'+
+      '<span style="font-size:13px;color:#CA8A04;font-weight:700">APIキーを入力してください</span></div>'+
+      '<input type="password" id="apiKeyInput" placeholder="sk-ant-api03-...">'+
+      '<p style="margin:8px 0 0;font-size:11px;color:#475569">キーはこのブラウザにのみ保存され、外部には送信されません（Anthropic APIへの通信のみに使用）</p></div>';
+    document.getElementById("apiKeyInput").addEventListener("change", function() {
+      apiKey = this.value;
+      try { localStorage.setItem("catch-risk-apikey", apiKey); } catch(e) {}
+      renderApiSection();
+    });
+  } else {
+    el.innerHTML = '<div class="api-ok"><span>🔑 APIキー設定済み</span>'+
+      '<button id="clearApiBtn">キーを変更</button></div>';
+    document.getElementById("clearApiBtn").addEventListener("click", function() {
+      apiKey = "";
+      try { localStorage.removeItem("catch-risk-apikey"); } catch(e) {}
+      renderApiSection();
+    });
+  }
 }
 
-/* ─── Main App ─── */
-function LiveCatchRiskApp() {
-  const [query, setQuery] = useState("");
-  const [area, setArea] = useState("金沢片町エリア");
-  const [apiKey, setApiKey] = useState(() => {
-    try { return localStorage.getItem("catch-risk-apikey") || ""; } catch(e) { return ""; }
+/* ── Merge ── */
+function mergeResult(newR, list) {
+  var idx = -1;
+  for (var i=0; i<list.length; i++) {
+    if (list[i].shopName.replace(/\s/g,"") === newR.shopName.replace(/\s/g,"")) { idx=i; break; }
+  }
+  if (idx === -1) return [newR].concat(list);
+  var old = list[idx];
+  var merged = {};
+  for (var k in newR) merged[k] = newR[k];
+  var allKW = (old.catchKeywords||[]).concat(newR.catchKeywords||[]);
+  merged.catchKeywords = allKW.filter(function(v,i,a){return a.indexOf(v)===i}).slice(0,10);
+  var rest = [];
+  for (var i=0; i<list.length; i++) { if (i!==idx) rest.push(list[i]); }
+  return [merged].concat(rest);
+}
+
+function registerResult(result) {
+  results = mergeResult(result, results);
+  expandedIdx = 0;
+  saveResults();
+  sendToSheet(result, calcFromData(result));
+  document.getElementById("queryInput").value = "";
+  render();
+}
+
+/* ── Confirm Dialog ── */
+function showConfirmDialog(result) {
+  pendingResult = result;
+  var ov = document.getElementById("confirmOverlay");
+  ov.className = "overlay";
+  ov.innerHTML = '<div class="modal">'+
+    '<h3>🔍 店舗の確認</h3>'+
+    '<p style="margin:0 0 16px;font-size:12px;color:#64748B">検索語「'+esc(result.query)+'」に対して以下の店舗が見つかりました。この店舗で合っていますか？</p>'+
+    '<div class="modal-detail">'+
+    '<p style="margin:0 0 6px;font-size:15px;color:#F1F5F9;font-weight:700">'+esc(result.shopName)+'</p>'+
+    '<p style="margin:0 0 4px;font-size:12px;color:#94A3B8">📍 '+esc(result.address)+'</p>'+
+    (result.gmap!=null?'<p style="margin:0;font-size:12px;color:#94A3B8">⭐ Gマップ ★'+result.gmap+'</p>':'')+
+    '</div>'+
+    '<div class="modal-btns">'+
+    '<button id="confirmNo" style="background:#1E293B;color:#94A3B8">違う店舗です</button>'+
+    '<button id="confirmYes" style="background:#2563EB;color:#fff;font-weight:700">合っています</button>'+
+    '</div></div>';
+  document.getElementById("confirmNo").addEventListener("click", closeConfirm);
+  document.getElementById("confirmYes").addEventListener("click", function() {
+    if (pendingResult) registerResult(pendingResult);
+    closeConfirm();
   });
-  const [loading, setLoading] = useState(false);
-  const [progress, setProgress] = useState("");
-  const [results, setResults] = useState([]);
-  const [expandedIdx, setExpandedIdx] = useState(null);
-  const [error, setError] = useState(null);
-  const [view, setView] = useState("cards");
-  const [pendingResult, setPendingResult] = useState(null);
-  const [showConfirm, setShowConfirm] = useState(false);
-
-  useEffect(() => {
-    setResults(loadSharedResults());
-  }, []);
-
-
-  async function doSearch() {
-    if (!query.trim()) return;
-    if (!apiKey.trim()) { setError("APIキーを入力してください（画面上部の🔑欄）"); return; }
-    setLoading(true); setError(null); setPendingResult(null); setShowConfirm(false);
-    setProgress("ウェブ検索を実行中…ホットペッパー・Googleマップ・口コミを調査しています");
-    try {
-      const resp = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": apiKey.trim(),
-          "anthropic-version": "2023-06-01"
-        },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 2000,
-          system: SYSTEM_PROMPT,
-          messages: [{ role: "user", content: `以下の店舗を調査してください: ${query.trim()}${area.trim() ? `（エリア: ${area.trim()}）` : ""}` }],
-          tools: [{ type: "web_search_20250305", name: "web_search" }]
-        })
-      });
-      const data = await resp.json();
-      setProgress("データを解析中…");
-      const textBlocks = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("\n");
-      let parsed = null;
-      try {
-        const cleaned = textBlocks.replace(/```json|```/g, "").trim();
-        const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
-        if (jsonMatch) parsed = JSON.parse(jsonMatch[0]);
-      } catch (e) { console.error("Parse error:", e, textBlocks); }
-      if (parsed) {
-        const now = new Date();
-        const ts = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,"0")}/${String(now.getDate()).padStart(2,"0")} ${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
-        const result = {
-          id: `${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
-          query: query.trim(), area: area.trim(), shopName: parsed.shopName || query.trim(),
-          address: parsed.address || "不明", floor: parsed.floor,
-          tabelog: parsed.tabelog, tabelogCount: parsed.tabelogCount,
-          gmap: parsed.gmap, gmapCount: parsed.gmapCount,
-          cheapCourse: parsed.cheapCourse, crownName: parsed.crownName || false,
-          sameAddress: parsed.sameAddress, catchKeywords: parsed.catchKeywords || [],
-          summary: parsed.summary || "", timestamp: ts,
-        };
-        function mergeWithExisting(newResult, existingResults) {
-          const idx = existingResults.findIndex(r =>
-            r.shopName.replace(/\s/g, "") === newResult.shopName.replace(/\s/g, "")
-          );
-          if (idx === -1) return [newResult, ...existingResults];
-          const old = existingResults[idx];
-          const mergedKW = [...new Set([...(old.catchKeywords || []), ...(newResult.catchKeywords || [])])].slice(0, 10);
-          const merged = { ...newResult, catchKeywords: mergedKW };
-          const rest = existingResults.filter((_, i) => i !== idx);
-          return [merged, ...rest];
-        }
-        const q = query.trim().toLowerCase();
-        const sn = (parsed.shopName || "").toLowerCase();
-        const isExactish = sn.includes(q) || q.includes(sn) || q.length >= 10;
-        if (isExactish) {
-          const updated = mergeWithExisting(result, results);
-          setResults(updated);
-          setExpandedIdx(0);
-          setQuery("");
-          saveSharedResults(updated);
-          sendToSheet(result, calcFromData(result));
-        } else {
-          setPendingResult(result);
-          setShowConfirm(true);
-        }
-      } else {
-        setError("検索結果を解析できませんでした。店名を正確に入力してください。");
-      }
-    } catch (e) {
-      console.error("Search error:", e);
-      setError("検索中にエラーが発生しました: " + e.message);
-    }
-    setLoading(false); setProgress("");
-  }
-
-  function confirmResult(accept) {
-    if (accept && pendingResult) {
-      function mergeConfirm(newR, existing) {
-        const idx = existing.findIndex(r => r.shopName.replace(/\s/g, "") === newR.shopName.replace(/\s/g, ""));
-        if (idx === -1) return [newR, ...existing];
-        const old = existing[idx];
-        const mergedKW = [...new Set([...(old.catchKeywords || []), ...(newR.catchKeywords || [])])].slice(0, 10);
-        const merged = { ...newR, catchKeywords: mergedKW };
-        const rest = existing.filter((_, i) => i !== idx);
-        return [merged, ...rest];
-      }
-      const updated = mergeConfirm(pendingResult, results);
-      setResults(updated);
-      setExpandedIdx(0);
-      setQuery("");
-      saveSharedResults(updated);
-      sendToSheet(pendingResult, calcFromData(pendingResult));
-    }
-    setPendingResult(null);
-    setShowConfirm(false);
-  }
-
-
-  const dangerCount = results.filter(r => calcFromData(r).pct >= 70).length;
-  const cautionCount = results.filter(r => calcFromData(r).pct >= 45 && calcFromData(r).pct < 70).length;
-
-  return (
-    <div style={{
-      minHeight: "100vh",
-      background: "linear-gradient(180deg, #020617 0%, #0F172A 40%, #020617 100%)",
-      color: "#F1F5F9", fontFamily: "'Noto Sans JP', sans-serif", padding: "0 0 60px"
-    }}>
-      {/* Header */}
-      <div style={{
-        padding: "36px 20px 28px",
-        background: "linear-gradient(180deg, rgba(220,38,38,0.08) 0%, transparent 100%)",
-        borderBottom: "1px solid #1E293B"
-      }}>
-        <div style={{ maxWidth: 960, margin: "0 auto" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-            <span style={{ fontSize: 26 }}>🔍</span>
-            <span style={{ background: "#DC2626", color: "#fff", padding: "3px 12px", borderRadius: 6, fontSize: 10, fontWeight: 700, letterSpacing: 1.5 }}>LIVE SEARCH</span>
-          </div>
-          <h1 style={{
-            margin: 0, fontSize: 24, fontWeight: 800, lineHeight: 1.3,
-            background: "linear-gradient(135deg, #F1F5F9 0%, #94A3B8 100%)",
-            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent"
-          }}>金沢片町 キャッチ居酒屋指数</h1>
-          <div>
-            <p style={{ margin: "4px 0 0", fontSize: 13, color: "#64748B" }}>Catch Izakaya Risk Index — リアルタイム版 v0.7</p>
-          </div>
-          <p style={{ margin: "10px 0 0", fontSize: 11, color: "#475569", lineHeight: 1.8 }}>
-            本ツールの調査対象は「酒類の提供を主とし、飲み放題付きコースを提供する飲食店」（居酒屋型飲食店）です。
-            店名に「居酒屋」を含まない業態（海鮮ダイニング・個室和食等）も、上記の要件を満たす場合は対象となります。
-          </p>
-        </div>
-      </div>
-
-      <div style={{ maxWidth: 960, margin: "0 auto", padding: "24px 20px 0" }}>
-        {/* API Key Input */}
-        {!apiKey.trim() && (
-          <div style={{
-            background: "#0F172A", border: "1px solid #CA8A04", borderRadius: 14, padding: "16px 20px", marginBottom: 16
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-              <span style={{ fontSize: 16 }}>🔑</span>
-              <span style={{ fontSize: 13, color: "#CA8A04", fontWeight: 700 }}>APIキーを入力してください</span>
-            </div>
-            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-              <input type="password" placeholder="sk-ant-api03-..."
-                onChange={e => {
-                  const v = e.target.value;
-                  setApiKey(v);
-                  try { localStorage.setItem("catch-risk-apikey", v); } catch(e) {}
-                }}
-                style={{ flex: 1, background: "#020617", border: "1px solid #1E293B", borderRadius: 10, padding: "10px 14px", color: "#F1F5F9", fontSize: 13, outline: "none", fontFamily: "monospace" }} />
-            </div>
-            <p style={{ margin: "8px 0 0", fontSize: 11, color: "#475569" }}>キーはこのブラウザにのみ保存され、外部には送信されません（Anthropic APIへの通信のみに使用）</p>
-          </div>
-        )}
-        {apiKey.trim() && (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-            <span style={{ fontSize: 12, color: "#065F46", display: "flex", alignItems: "center", gap: 4 }}>🔑 APIキー設定済み</span>
-            <button onClick={() => { setApiKey(""); try { localStorage.removeItem("catch-risk-apikey"); } catch(e) {} }} style={{
-              background: "transparent", border: "none", color: "#475569", fontSize: 11, cursor: "pointer", textDecoration: "underline"
-            }}>キーを変更</button>
-          </div>
-        )}
-        {/* Search Box */}
-        <div style={{
-          display: "flex", gap: 10, marginBottom: 12,
-          background: "#0F172A", border: "1px solid #1E293B", borderRadius: 14, padding: 8, alignItems: "center",
-          flexWrap: "wrap"
-        }}>
-          <input type="text" value={query} onChange={e => setQuery(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && !loading && doSearch()}
-            placeholder="店名（例：○○居酒屋）" disabled={loading}
-            style={{ flex: "2 1 180px", background: "transparent", border: "none", outline: "none", color: "#F1F5F9", fontSize: 15, padding: "10px 14px", fontFamily: "'Noto Sans JP', sans-serif", minWidth: 0 }} />
-          <div style={{ width: 1, height: 24, background: "#1E293B", flexShrink: 0 }} />
-          <input type="text" value={area} onChange={e => setArea(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && !loading && doSearch()}
-            placeholder="エリア（変更可）" disabled={loading}
-            style={{ flex: "1 1 120px", background: "transparent", border: "none", outline: "none", color: "#94A3B8", fontSize: 14, padding: "10px 14px", fontFamily: "'Noto Sans JP', sans-serif", minWidth: 0 }} />
-          <button onClick={doSearch} disabled={loading || !query.trim()} style={{
-            background: loading ? "#1E293B" : "#DC2626", color: "#fff", border: "none",
-            borderRadius: 10, padding: "10px 24px", fontSize: 14, fontWeight: 700,
-            cursor: loading ? "wait" : "pointer", opacity: (!query.trim() && !loading) ? 0.4 : 1,
-            transition: "all 0.2s", fontFamily: "'Noto Sans JP', sans-serif", whiteSpace: "nowrap"
-          }}>{loading ? "検索中…" : "調査開始"}</button>
-        </div>
-
-        {/* Privacy Notice */}
-        <div style={{
-          display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 20,
-          background: "#0F172A", border: "1px solid #1E293B", borderRadius: 10, padding: "10px 14px"
-        }}>
-          <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>🔐</span>
-          <p style={{ margin: 0, fontSize: 11, color: "#64748B", lineHeight: 1.7 }}>
-            本ツールは入力された店名および公開グルメサイトから取得した評点・口コミ情報のみを記録します。利用者の個人情報は一切収集されません。調査結果はGoogleスプレッドシートに自動集約されます。
-          </p>
-        </div>
-
-        {/* Loading search */}
-        {loading && (
-          <div style={{ background: "#0F172A", border: "1px solid #1E293B", borderRadius: 14, padding: "20px 24px", marginBottom: 20, textAlign: "center" }}>
-            <div style={{ width: 40, height: 40, border: "3px solid #1E293B", borderTopColor: "#DC2626", borderRadius: "50%", margin: "0 auto 14px", animation: "spin 1s linear infinite" }} />
-            <p style={{ color: "#94A3B8", fontSize: 13, margin: 0 }}>{progress}</p>
-            <p style={{ color: "#475569", fontSize: 11, margin: "8px 0 0" }}>Googleマップ・ホットペッパー・口コミを横断検索しています（10〜20秒）</p>
-          </div>
-        )}
-        {error && <div style={{ background: "#1a0505", border: "1px solid #7F1D1D", borderRadius: 14, padding: "16px 20px", marginBottom: 20, color: "#FCA5A5", fontSize: 13 }}>{error}</div>}
-
-        {/* View Toggle */}
-        {results.length > 0 && (
-          <div style={{ display: "flex", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-              <TabBtn active={view === "cards"} onClick={() => setView("cards")}>カード表示</TabBtn>
-              <TabBtn active={view === "table"} onClick={() => setView("table")}>一覧表示</TabBtn>
-              <span style={{ fontSize: 12, color: "#475569", marginLeft: 8 }}>
-                {results.length}店舗調査済
-                {dangerCount > 0 && <span style={{ color: "#DC2626", marginLeft: 6 }}>（危険{dangerCount}）</span>}
-                {cautionCount > 0 && <span style={{ color: "#EA580C", marginLeft: 4 }}>（要注意{cautionCount}）</span>}
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* ═══ Card View ═══ */}
-        {view === "cards" && results.map((r, idx) => {
-          const risk = calcFromData(r);
-          const expanded = expandedIdx === idx;
-          return (
-            <div key={r.id || idx} style={{
-              background: risk.pct >= 70 ? "linear-gradient(135deg, #1a0505 0%, #0F172A 100%)" : risk.pct >= 45 ? "linear-gradient(135deg, #1a0f05 0%, #0F172A 100%)" : "linear-gradient(135deg, #0F172A 0%, #0F172A 100%)",
-              border: `1px solid ${risk.pct >= 70 ? "#7F1D1D" : risk.pct >= 45 ? "#7C2D12" : "#1E293B"}`,
-              borderRadius: 16, padding: "20px 24px", marginBottom: 12, transition: "all 0.3s",
-              boxShadow: risk.pct >= 70 ? "0 0 30px rgba(220,38,38,0.15)" : "none"
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 20, cursor: "pointer" }} onClick={() => setExpandedIdx(expanded ? null : idx)}>
-                <RiskMeter pct={risk.pct} color={risk.color} level={risk.level} size={window.innerWidth < 480 ? 80 : 120} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                    <h3 style={{ margin: 0, fontSize: window.innerWidth < 480 ? 14 : 17, fontWeight: 700, color: "#F1F5F9", lineHeight: 1.4 }}>{r.shopName}</h3>
-                  </div>
-                  <p style={{ margin: "4px 0 0", fontSize: 12, color: "#64748B", wordBreak: "break-all" }}>{r.address}{r.area ? <span style={{ marginLeft: 8, background: "#1E293B", color: "#94A3B8", padding: "2px 8px", borderRadius: 10, fontSize: 11 }}>{r.area}</span> : null}</p>
-                  <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
-                    {r.tabelog != null && <span style={{ background: r.tabelog < 3.1 ? "#7F1D1D" : "#1E293B", color: r.tabelog < 3.1 ? "#FCA5A5" : "#94A3B8", padding: "2px 8px", borderRadius: 20, fontSize: 11, fontWeight: 600 }}>食べログ {r.tabelog}</span>}
-                    {r.gmap != null && <span style={{ background: "#1E293B", color: "#94A3B8", padding: "2px 8px", borderRadius: 20, fontSize: 11, fontWeight: 600 }}>Gマップ ★{r.gmap}</span>}
-                    {r.cheapCourse != null && r.cheapCourse < 3300 && <span style={{ background: "#7C2D12", color: "#FDBA74", padding: "2px 8px", borderRadius: 20, fontSize: 11, fontWeight: 600 }}>飲放{r.cheapCourse}円</span>}
-                  </div>
-                  <p style={{ margin: "4px 0 0", fontSize: 10, color: "#334155" }}>{r.timestamp}</p>
-                </div>
-              </div>
-              {expanded && (
-                <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid #1E293B" }}>
-                  {r.summary && <p style={{ background: "#1E293B", padding: "12px 16px", borderRadius: 10, fontSize: 13, color: "#CBD5E1", lineHeight: 1.7, margin: "0 0 16px" }}>{r.summary}</p>}
-                  <h4 style={{ color: "#F1F5F9", fontSize: 14, margin: "0 0 12px" }}>リスク要因分析</h4>
-                  {risk.factors.length === 0 && <p style={{ color: "#64748B", fontSize: 13 }}>特筆すべきリスク要因は検出されませんでした。</p>}
-                  {risk.factors.map((f, i) => (
-                    <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 8 }}>
-                      <span style={{ background: f.w >= 3 ? "#DC2626" : f.w >= 2 ? "#EA580C" : f.w >= 1 ? "#CA8A04" : "#475569", color: "#fff", padding: "2px 8px", borderRadius: 6, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap", minWidth: 28, textAlign: "center" }}>+{f.w}</span>
-                      <div>
-                        <span style={{ color: "#E2E8F0", fontSize: 13, fontWeight: 600 }}>{f.l}</span>
-                        <span style={{ color: "#64748B", fontSize: 12, marginLeft: 8 }}>{f.det}</span>
-                      </div>
-                    </div>
-                  ))}
-                  {r.catchKeywords && r.catchKeywords.length > 0 && (
-                    <div style={{ marginTop: 16 }}>
-                      <h4 style={{ color: "#FCA5A5", fontSize: 13, margin: "0 0 8px" }}>口コミから検出されたキーワード</h4>
-                      {r.catchKeywords.map((q, i) => (
-                        <div key={i} style={{ background: "#1E293B", borderLeft: "3px solid #DC2626", padding: "8px 12px", marginBottom: 6, borderRadius: "0 8px 8px 0", color: "#CBD5E1", fontSize: 12, fontStyle: "italic", lineHeight: 1.5 }}>「{q}」</div>
-                      ))}
-                    </div>
-                  )}
-                  {r.sameAddress && <div style={{ marginTop: 12, background: "#1E293B", padding: "10px 14px", borderRadius: 10, fontSize: 12, color: "#FDBA74" }}>⚠ 同住所の別店舗: {r.sameAddress}</div>}
-                </div>
-              )}
-            </div>
-          );
-        })}
-
-        {/* ═══ Table View ═══ */}
-        {view === "table" && results.length > 0 && (
-          <div style={{ overflowX: "auto", borderRadius: 14, border: "1px solid #1E293B" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, fontFamily: "'Noto Sans JP', sans-serif" }}>
-              <thead>
-                <tr style={{ background: "#0F172A" }}>
-                  {["No.", "店名", "エリア", "階", "Gマップ", "最安コース", "スコア", "判定", "キャッチ"].map(h => (
-                    <th key={h} style={{ padding: "10px 8px", color: "#94A3B8", fontWeight: 600, textAlign: "left", borderBottom: "1px solid #1E293B", whiteSpace: "nowrap", fontSize: 11 }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {results.map((r, i) => {
-                  const risk = calcFromData(r);
-                  return (
-                    <tr key={r.id || i} style={{ borderBottom: "1px solid #1E293B", background: i % 2 === 0 ? "transparent" : "rgba(15,23,42,0.5)" }}>
-                      <td style={{ padding: "8px", color: "#64748B" }}>{i + 1}</td>
-                      <td style={{ padding: "8px", color: "#F1F5F9", fontWeight: 600 }}>{r.shopName}</td>
-                      <td style={{ padding: "8px", color: "#64748B", fontSize: 11 }}>{r.area || "-"}</td>
-                      <td style={{ padding: "8px", color: r.floor >= 4 ? "#FCA5A5" : "#94A3B8" }}>{r.floor != null ? `${r.floor}F` : "-"}</td>
-                      <td style={{ padding: "8px", color: "#94A3B8" }}>{r.gmap != null ? `★${r.gmap}` : "-"}</td>
-                      <td style={{ padding: "8px", color: r.cheapCourse != null && r.cheapCourse < 2000 ? "#FCA5A5" : "#94A3B8" }}>{r.cheapCourse != null ? `${r.cheapCourse}円` : "-"}</td>
-                      <td style={{ padding: "8px" }}>
-                        <span style={{ background: risk.color, color: "#fff", padding: "2px 10px", borderRadius: 10, fontWeight: 700, fontSize: 12, fontFamily: "'DM Mono', monospace" }}>{risk.pct}</span>
-                      </td>
-                      <td style={{ padding: "8px", color: risk.color, fontWeight: 700, fontSize: 12 }}>{risk.level}</td>
-                      <td style={{ padding: "8px", color: r.catchKeywords.length > 0 ? "#FCA5A5" : "#334155" }}>
-                        {r.catchKeywords.length > 0 ? `${r.catchKeywords.length}件` : "-"}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Empty state */}
-        {results.length === 0 && !loading && (
-          <div style={{ textAlign: "center", padding: "48px 20px", color: "#334155" }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>🏮</div>
-            <p style={{ fontSize: 14, lineHeight: 1.7 }}>
-              上の検索ボックスに居酒屋の店名を入力してください。<br />
-              Googleマップ・ホットペッパー・口コミを自動検索し、<br />
-              キャッチ居酒屋の可能性を判定します。
-            </p>
-            <p style={{ fontSize: 13, color: "#475569", marginTop: 16, lineHeight: 1.7 }}>
-              調査結果はブラウザ内に保存されます。<br />
-              管理者のみ「Excelダウンロード」で一括出力できます。
-            </p>
-          </div>
-        )}
-
-        {/* Legend */}
-        <div style={{ marginTop: 32, background: "#0F172A", border: "1px solid #1E293B", borderRadius: 16, padding: "20px 24px" }}>
-          <h4 style={{ margin: "0 0 14px", fontSize: 14, color: "#F1F5F9", fontWeight: 700 }}>スコアリング基準</h4>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 16px", fontSize: 11, color: "#94A3B8", lineHeight: 1.8 }}>
-            <div>• 所在階4F以上 → +2 / 2-3F → +1</div>
-            <div>• 飲放付2,000円未満 → +2 / 3,300円未満 → +1</div>
-            <div>• 口コミ「キャッチ/ぼったくり」3件超 → +3</div>
-            <div>• 口コミ「キャッチ/ぼったくり」1-2件 → +2</div>
-            <div>• 同住所に別店舗 → +1</div>
-            <div>• SEO的冠語（個室/完全個室等）→ +1</div>
-            <div>• Gマップ★3.5以下 → +1</div>
-            <div style={{ color: "#475569" }}>※ 食べログ評点は参考表示（スコア非加算）</div>
-          </div>
-          <div style={{ marginTop: 14, display: "flex", gap: 14, fontSize: 11, flexWrap: "wrap" }}>
-            <span><span style={{ color: "#DC2626", fontWeight: 700 }}>■ 70〜100</span> 危険</span>
-            <span><span style={{ color: "#EA580C", fontWeight: 700 }}>■ 45〜69</span> 要注意</span>
-            <span><span style={{ color: "#CA8A04", fontWeight: 700 }}>■ 25〜44</span> やや注意</span>
-            <span><span style={{ color: "#16A34A", fontWeight: 700 }}>■ 0〜24</span> 低リスク</span>
-          </div>
-        </div>
-
-        <div style={{ marginTop: 24, textAlign: "center", fontSize: 11, color: "#334155", lineHeight: 1.8 }}>
-          <p>金沢市片町 客引き問題調査 ─ 北陸大学 山本研究室</p>
-          <p>リアルタイム検索版 v0.7 ─ 調査データに基づく参考指標です</p>
-        </div>
-      </div>
-
-      {/* Confirmation Dialog */}
-      {showConfirm && pendingResult && (
-        <div style={{
-          position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)",
-          display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9998, padding: 20
-        }} onClick={() => confirmResult(false)}>
-          <div onClick={e => e.stopPropagation()} style={{
-            background: "#0F172A", border: "1px solid #1E293B", borderRadius: 16,
-            padding: "32px 28px", maxWidth: 380, width: "100%", boxShadow: "0 20px 60px rgba(0,0,0,0.5)"
-          }}>
-            <h3 style={{ margin: "0 0 6px", fontSize: 16, color: "#F1F5F9", fontWeight: 700 }}>🔍 店舗の確認</h3>
-            <p style={{ margin: "0 0 16px", fontSize: 12, color: "#64748B" }}>
-              検索語「{pendingResult.query}」に対して以下の店舗が見つかりました。この店舗で合っていますか？
-            </p>
-            <div style={{ background: "#020617", border: "1px solid #1E293B", borderRadius: 12, padding: "16px", marginBottom: 20 }}>
-              <p style={{ margin: "0 0 6px", fontSize: 15, color: "#F1F5F9", fontWeight: 700 }}>{pendingResult.shopName}</p>
-              <p style={{ margin: "0 0 4px", fontSize: 12, color: "#94A3B8" }}>📍 {pendingResult.address}</p>
-              {pendingResult.gmap != null && <p style={{ margin: "0", fontSize: 12, color: "#94A3B8" }}>⭐ Gマップ ★{pendingResult.gmap}</p>}
-            </div>
-            <div style={{ display: "flex", gap: 10 }}>
-              <button onClick={() => confirmResult(false)} style={{
-                flex: 1, background: "#1E293B", color: "#94A3B8", border: "none",
-                borderRadius: 10, padding: "12px", fontSize: 13, cursor: "pointer",
-                fontFamily: "'Noto Sans JP', sans-serif"
-              }}>違う店舗です</button>
-              <button onClick={() => confirmResult(true)} style={{
-                flex: 1, background: "#2563EB", color: "#fff", border: "none",
-                borderRadius: 10, padding: "12px", fontSize: 13, fontWeight: 700, cursor: "pointer",
-                fontFamily: "'Noto Sans JP', sans-serif"
-              }}>合っています</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-    </div>
-  );
+}
+function closeConfirm() {
+  pendingResult = null;
+  document.getElementById("confirmOverlay").className = "overlay hidden";
 }
 
-ReactDOM.render(<LiveCatchRiskApp />, document.getElementById("root"));
+/* ── Search ── */
+function showLoading(on) {
+  var el = document.getElementById("loadingArea");
+  var btn = document.getElementById("searchBtn");
+  if (on) {
+    el.className = "";
+    el.innerHTML = '<div class="loading"><div class="spinner"></div>'+
+      '<p style="color:#94A3B8;font-size:13px">ウェブ検索を実行中…</p>'+
+      '<p style="color:#475569;font-size:11px;margin-top:8px">Googleマップ・ホットペッパー・口コミを横断検索しています（10〜20秒）</p></div>';
+    btn.disabled = true; btn.textContent = "検索中…";
+  } else {
+    el.className = "hidden"; el.innerHTML = "";
+    btn.disabled = false; btn.textContent = "調査開始";
+  }
+}
+function showError(msg) {
+  var el = document.getElementById("errorArea");
+  el.className = ""; el.innerHTML = '<div class="error-box">'+esc(msg)+'</div>';
+}
+function hideError() {
+  var el = document.getElementById("errorArea");
+  el.className = "hidden"; el.innerHTML = "";
+}
+
+async function doSearch() {
+  var q = document.getElementById("queryInput").value.trim();
+  var a = document.getElementById("areaInput").value.trim();
+  if (!q) return;
+  if (!apiKey.trim()) { showError("APIキーを入力してください（画面上部の🔑欄）"); return; }
+  showLoading(true);
+  hideError();
+  try {
+    var resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {"Content-Type":"application/json","x-api-key":apiKey.trim(),"anthropic-version":"2023-06-01"},
+      body: JSON.stringify({
+        model:"claude-sonnet-4-20250514", max_tokens:2000, system:SYSTEM_PROMPT,
+        messages:[{role:"user",content:"以下の店舗を調査してください: "+q+(a?"（エリア: "+a+"）":"")}],
+        tools:[{type:"web_search_20250305",name:"web_search"}]
+      })
+    });
+    var data = await resp.json();
+    if (data.error) {
+      showError("APIエラー: "+(data.error.message||JSON.stringify(data.error)));
+      showLoading(false); return;
+    }
+    var texts = [];
+    if (data.content) {
+      for (var i=0; i<data.content.length; i++) {
+        if (data.content[i].type==="text") texts.push(data.content[i].text);
+      }
+    }
+    var allText = texts.join("\n").replace(/```json|```/g,"").trim();
+    var m = allText.match(/\{[\s\S]*\}/);
+    if (!m) { showError("検索結果を解析できませんでした。店名を正確に入力してください。"); showLoading(false); return; }
+    var parsed = JSON.parse(m[0]);
+    var now = new Date();
+    var pad = function(n){return ("0"+n).slice(-2)};
+    var ts = now.getFullYear()+"/"+pad(now.getMonth()+1)+"/"+pad(now.getDate())+" "+pad(now.getHours())+":"+pad(now.getMinutes());
+    var result = {
+      id: Date.now()+"-"+Math.random().toString(36).slice(2,8),
+      query:q, area:a, shopName:parsed.shopName||q,
+      address:parsed.address||"不明", floor:parsed.floor,
+      tabelog:parsed.tabelog, tabelogCount:parsed.tabelogCount,
+      gmap:parsed.gmap, gmapCount:parsed.gmapCount,
+      cheapCourse:parsed.cheapCourse, crownName:parsed.crownName||false,
+      sameAddress:parsed.sameAddress, catchKeywords:parsed.catchKeywords||[],
+      summary:parsed.summary||"", timestamp:ts
+    };
+    var sn = (parsed.shopName||"").toLowerCase();
+    var ql = q.toLowerCase();
+    var isExact = sn.indexOf(ql)>=0 || ql.indexOf(sn)>=0 || q.length>=10;
+    if (isExact) { registerResult(result); } else { showConfirmDialog(result); }
+  } catch(e) {
+    showError("検索中にエラーが発生しました: "+e.message);
+  }
+  showLoading(false);
+}
+
+/* ── Render ── */
+function render() {
+  var area = document.getElementById("resultsArea");
+  var empty = document.getElementById("emptyState");
+  var stats = document.getElementById("statsArea");
+  var isMobile = window.innerWidth < 480;
+  var mSize = isMobile ? 80 : 120;
+
+  if (results.length === 0) {
+    area.innerHTML = "";
+    stats.className = "hidden";
+    empty.innerHTML = '<div class="empty"><div style="font-size:48px;margin-bottom:16px">🏮</div>'+
+      '<p style="font-size:14px;line-height:1.7">上の検索ボックスに居酒屋の店名を入力してください。<br>'+
+      'Googleマップ・ホットペッパー・口コミを自動検索し、<br>キャッチ居酒屋の可能性を判定します。</p>'+
+      '<p style="font-size:13px;color:#475569;margin-top:16px;line-height:1.7">調査結果はGoogleスプレッドシートに自動集約されます。</p></div>';
+    return;
+  }
+  empty.innerHTML = "";
+  var dc=0, cc=0;
+  for (var i=0; i<results.length; i++) {
+    var p = calcFromData(results[i]).pct;
+    if (p>=70) dc++; else if (p>=45) cc++;
+  }
+  stats.className = "";
+  stats.innerHTML = '<div class="stats">'+results.length+'店舗調査済'+
+    (dc>0?'<span style="color:#DC2626;margin-left:6px">（危険'+dc+'）</span>':'')+
+    (cc>0?'<span style="color:#EA580C;margin-left:4px">（要注意'+cc+'）</span>':'')+'</div>';
+
+  var html = "";
+  for (var idx=0; idx<results.length; idx++) {
+    var r = results[idx];
+    var risk = calcFromData(r);
+    var bg = risk.pct>=70?"linear-gradient(135deg,#1a0505 0%,#0F172A 100%)":risk.pct>=45?"linear-gradient(135deg,#1a0f05 0%,#0F172A 100%)":"linear-gradient(135deg,#0F172A 0%,#0F172A 100%)";
+    var bd = risk.pct>=70?"#7F1D1D":risk.pct>=45?"#7C2D12":"#1E293B";
+    var sh = risk.pct>=70?"0 0 30px rgba(220,38,38,0.15)":"none";
+    html += '<div class="card" style="background:'+bg+';border:1px solid '+bd+';box-shadow:'+sh+'" data-idx="'+idx+'">';
+    html += '<div class="card-header">';
+    html += meterSVG(risk.pct, risk.color, risk.level, mSize);
+    html += '<div style="flex:1;min-width:0">';
+    html += '<h3>'+esc(r.shopName)+'</h3>';
+    html += '<p class="addr">'+esc(r.address)+(r.area?'<span class="area-badge">'+esc(r.area)+'</span>':'')+'</p>';
+    html += '<div class="tags">';
+    if (r.tabelog!=null) html+='<span class="tag" style="background:'+(r.tabelog<3.1?"#7F1D1D":"#1E293B")+';color:'+(r.tabelog<3.1?"#FCA5A5":"#94A3B8")+'">食べログ '+r.tabelog+'</span>';
+    if (r.gmap!=null) html+='<span class="tag" style="background:#1E293B;color:#94A3B8">Gマップ ★'+r.gmap+'</span>';
+    if (r.cheapCourse!=null && r.cheapCourse<3300) html+='<span class="tag" style="background:#7C2D12;color:#FDBA74">飲放'+r.cheapCourse+'円</span>';
+    html += '</div>';
+    html += '<p class="ts">'+esc(r.timestamp)+'</p>';
+    html += '</div></div>';
+
+    if (expandedIdx === idx) {
+      html += '<div class="detail">';
+      if (r.summary) html += '<p class="summary-box">'+esc(r.summary)+'</p>';
+      html += '<h4 style="color:#F1F5F9;font-size:14px;margin:0 0 12px">リスク要因分析</h4>';
+      if (risk.factors.length===0) html+='<p style="color:#64748B;font-size:13px">特筆すべきリスク要因は検出されませんでした。</p>';
+      for (var fi=0; fi<risk.factors.length; fi++) {
+        var f = risk.factors[fi];
+        var fbg = f.w>=3?"#DC2626":f.w>=2?"#EA580C":f.w>=1?"#CA8A04":"#475569";
+        html += '<div class="factor"><span class="fw" style="background:'+fbg+'">+'+f.w+'</span><div><span style="color:#E2E8F0;font-size:13px;font-weight:600">'+esc(f.l)+'</span><span style="color:#64748B;font-size:12px;margin-left:8px">'+esc(f.det)+'</span></div></div>';
+      }
+      if (r.catchKeywords && r.catchKeywords.length>0) {
+        html += '<div style="margin-top:16px"><h4 style="color:#FCA5A5;font-size:13px;margin:0 0 8px">口コミから検出されたキーワード</h4>';
+        for (var ki=0; ki<r.catchKeywords.length; ki++) {
+          html += '<div class="kw-item">「'+esc(r.catchKeywords[ki])+'」</div>';
+        }
+        html += '</div>';
+      }
+      if (r.sameAddress) html += '<div class="same-addr-box">⚠ 同住所の別店舗: '+esc(r.sameAddress)+'</div>';
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+  area.innerHTML = html;
+
+  // Attach click handlers
+  var cards = area.querySelectorAll(".card");
+  for (var ci=0; ci<cards.length; ci++) {
+    cards[ci].addEventListener("click", function() {
+      var i = parseInt(this.getAttribute("data-idx"));
+      expandedIdx = (expandedIdx===i) ? null : i;
+      render();
+    });
+  }
+}
+
+/* ── Init ── */
+document.getElementById("searchBtn").addEventListener("click", doSearch);
+document.getElementById("queryInput").addEventListener("keydown", function(e){if(e.key==="Enter")doSearch()});
+document.getElementById("areaInput").addEventListener("keydown", function(e){if(e.key==="Enter")doSearch()});
+renderApiSection();
+render();
 </script>
 </body>
 </html>
