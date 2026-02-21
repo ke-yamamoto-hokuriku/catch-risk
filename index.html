@@ -288,6 +288,8 @@ function closeConfirm() {
   document.getElementById("confirmOverlay").className = "overlay hidden";
 }
 
+function stripTags(s) { if (!s) return s; return s.replace(/<[^>]*>/g, ""); }
+
 /* ── Search ── */
 function showLoading(on) {
   var el = document.getElementById("loadingArea");
@@ -349,13 +351,13 @@ async function doSearch() {
     var ts = now.getFullYear()+"/"+pad(now.getMonth()+1)+"/"+pad(now.getDate())+" "+pad(now.getHours())+":"+pad(now.getMinutes());
     var result = {
       id: Date.now()+"-"+Math.random().toString(36).slice(2,8),
-      query:q, area:a, shopName:parsed.shopName||q,
-      address:parsed.address||"不明", floor:parsed.floor,
+      query:q, area:a, shopName:stripTags(parsed.shopName)||q,
+      address:stripTags(parsed.address)||"不明", floor:parsed.floor,
       tabelog:parsed.tabelog, tabelogCount:parsed.tabelogCount,
       gmap:parsed.gmap, gmapCount:parsed.gmapCount,
       cheapCourse:parsed.cheapCourse, crownName:parsed.crownName||false,
-      sameAddress:parsed.sameAddress, catchKeywords:parsed.catchKeywords||[],
-      summary:parsed.summary||"", timestamp:ts
+      sameAddress:stripTags(parsed.sameAddress), catchKeywords:(parsed.catchKeywords||[]).map(stripTags),
+      summary:stripTags(parsed.summary)||"", timestamp:ts
     };
     var sn = (parsed.shopName||"").toLowerCase();
     var ql = q.toLowerCase();
