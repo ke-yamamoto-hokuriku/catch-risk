@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>金沢片町 飲食店 顧客満足度調査</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:linear-gradient(180deg,#020617 0%,#0F172A 40%,#020617 100%);color:#F1F5F9;font-family:'Noto Sans JP',sans-serif;min-height:100vh}
+@keyframes spin{to{transform:rotate(360deg)}}
+.wrap{max-width:960px;margin:0 auto;padding:24px 20px 60px}
+.header{padding:36px 20px 28px;background:linear-gradient(180deg,rgba(220,38,38,0.08) 0%,transparent 100%);border-bottom:1px solid #1E293B}
+.header-inner{max-width:960px;margin:0 auto}
+h1{font-size:24px;font-weight:800;line-height:1.3;background:linear-gradient(135deg,#F1F5F9 0%,#94A3B8 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.subtitle{margin:4px 0 0;font-size:13px;color:#64748B}
+.definition{margin:10px 0 0;font-size:11px;color:#475569;line-height:1.8}
+.badge{background:#DC2626;color:#fff;padding:3px 12px;border-radius:6px;font-size:10px;font-weight:700;letter-spacing:1.5px}
+.apibox{background:#0F172A;border:1px solid #CA8A04;border-radius:14px;padding:16px 20px;margin-bottom:16px}
+.apibox input{width:100%;background:#020617;border:1px solid #1E293B;border-radius:10px;padding:10px 14px;color:#F1F5F9;font-size:13px;outline:none;font-family:monospace;margin-top:8px;box-sizing:border-box}
+.api-ok{font-size:12px;color:#065F46;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.api-ok button{background:none;border:none;color:#475569;font-size:11px;cursor:pointer;text-decoration:underline}
+.searchbox{display:flex;gap:10px;margin-bottom:12px;background:#0F172A;border:1px solid #1E293B;border-radius:14px;padding:8px;align-items:center;flex-wrap:wrap}
+.searchbox input{background:transparent;border:none;outline:none;color:#F1F5F9;font-size:15px;padding:10px 14px;font-family:'Noto Sans JP',sans-serif;min-width:0}
+.q-input{flex:2 1 180px}
+.a-input{flex:1 1 120px;color:#94A3B8 !important;font-size:14px !important}
+.divider{width:1px;height:24px;background:#1E293B;flex-shrink:0}
+.btn-search{background:#DC2626;color:#fff;border:none;border-radius:10px;padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.2s;font-family:'Noto Sans JP',sans-serif;white-space:nowrap}
+.btn-search:disabled{background:#1E293B;cursor:wait;opacity:0.7}
+.privacy{display:flex;align-items:flex-start;gap:8px;margin-bottom:20px;background:#0F172A;border:1px solid #1E293B;border-radius:10px;padding:10px 14px}
+.privacy p{font-size:11px;color:#64748B;line-height:1.7}
+.loading{background:#0F172A;border:1px solid #1E293B;border-radius:14px;padding:20px 24px;margin-bottom:20px;text-align:center}
+.spinner{width:40px;height:40px;border:3px solid #1E293B;border-top-color:#DC2626;border-radius:50%;margin:0 auto 14px;animation:spin 1s linear infinite}
+.error-box{background:#1a0505;border:1px solid #7F1D1D;border-radius:14px;padding:16px 20px;margin-bottom:20px;color:#FCA5A5;font-size:13px}
+.card{border-radius:16px;padding:20px 24px;margin-bottom:12px;transition:all 0.3s;cursor:pointer}
+.card-header{display:flex;align-items:center;gap:20px}
+.card h3{font-size:17px;font-weight:700;color:#F1F5F9;line-height:1.4;margin:0}
+.card .addr{margin:4px 0 0;font-size:12px;color:#64748B;word-break:break-all}
+.tags{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.tag{padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;display:inline-block}
+.ts{margin:4px 0 0;font-size:10px;color:#334155}
+.detail{margin-top:20px;padding-top:16px;border-top:1px solid #1E293B}
+.summary-box{background:#1E293B;padding:12px 16px;border-radius:10px;font-size:13px;color:#CBD5E1;line-height:1.7;margin:0 0 16px}
+.factor{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px}
+.fw{padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap;min-width:28px;text-align:center;color:#fff}
+.kw-item{background:#1E293B;border-left:3px solid #DC2626;padding:8px 12px;margin-bottom:6px;border-radius:0 8px 8px 0;color:#CBD5E1;font-size:12px;font-style:italic;line-height:1.5}
+.same-addr-box{margin-top:12px;background:#1E293B;padding:10px 14px;border-radius:10px;font-size:12px;color:#FDBA74}
+.meter{position:relative;flex-shrink:0}
+.meter-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.legend{margin-top:32px;background:#0F172A;border:1px solid #1E293B;border-radius:16px;padding:20px 24px}
+.legend h4{margin:0 0 14px;font-size:14px;color:#F1F5F9;font-weight:700}
+.legend-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;font-size:11px;color:#94A3B8;line-height:1.8}
+.legend-levels{margin-top:14px;display:flex;gap:14px;font-size:11px;flex-wrap:wrap}
+.footer{margin-top:24px;text-align:center;font-size:11px;color:#334155;line-height:1.8}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:9998;padding:20px}
+.modal{background:#0F172A;border:1px solid #1E293B;border-radius:16px;padding:32px 28px;max-width:380px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+.modal h3{margin:0 0 6px;font-size:16px;color:#F1F5F9;font-weight:700}
+.modal-detail{background:#020617;border:1px solid #1E293B;border-radius:12px;padding:16px;margin-bottom:20px}
+.modal-btns{display:flex;gap:10px}
+.modal-btns button{flex:1;border:none;border-radius:10px;padding:12px;font-size:13px;cursor:pointer;font-family:'Noto Sans JP',sans-serif}
+.area-badge{margin-left:8px;background:#1E293B;color:#94A3B8;padding:2px 8px;border-radius:10px;font-size:11px;display:inline-block}
+.stats{font-size:12px;color:#475569;margin-bottom:16px}
+.empty{text-align:center;padding:48px 20px;color:#334155}
+.hidden{display:none}
+@media(max-width:480px){
+  .card h3{font-size:14px}
+  .legend-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+      <span style="font-size:26px">🔍</span>
+      <span class="badge">LIVE SEARCH</span>
+    </div>
+    <h1>金沢片町 飲食店 顧客満足度調査</h1>
+    <p class="subtitle">Customer Satisfaction Survey — v0.8</p>
+    <p class="definition">本ツールの調査対象は「酒類の提供を主とし、飲み放題付きコースを提供する飲食店」（居酒屋型飲食店）です。店名に「居酒屋」を含まない業態（海鮮ダイニング・個室和食等）も、上記の要件を満たす場合は対象となります。</p>
+  </div>
+</div>
+
+<div class="wrap">
+  <div id="apiSection"></div>
+
+  <div class="searchbox">
+    <input type="text" id="queryInput" class="q-input" placeholder="店名（例：○○居酒屋）">
+    <div class="divider"></div>
+    <input type="text" id="areaInput" class="a-input" placeholder="エリア（変更可）" value="金沢片町エリア">
+    <button class="btn-search" id="searchBtn">調査開始</button>
+  </div>
+
+  <div class="privacy">
+    <span style="font-size:14px;flex-shrink:0;margin-top:1px">🔐</span>
+    <p>本ツールは入力された店名および公開グルメサイトから取得した評点・口コミ情報のみを記録します。利用者の個人情報は一切収集されません。調査結果はGoogleスプレッドシートに自動集約されます。</p>
+  </div>
+
+  <div id="loadingArea" class="hidden"></div>
+  <div id="errorArea" class="hidden"></div>
+  <div id="statsArea" class="hidden"></div>
+  <div id="resultsArea"></div>
+  <div id="emptyState"></div>
+
+  <div class="legend">
+    <h4>スコアリング基準</h4>
+    <div class="legend-grid">
+      <div>• 所在階4F以上 → +2 / 2-3F → +1</div>
+      <div>• 飲放付2,000円未満 → +2 / 3,300円未満 → +1</div>
+      <div>• 口コミ「キャッチ/ぼったくり」3件超 → +3</div>
+      <div>• 口コミ「キャッチ/ぼったくり」1-2件 → +2</div>
+      <div>• 同住所に別店舗 → +1</div>
+      <div>• SEO的冠語（個室/完全個室等）→ +1</div>
+      <div>• Gマップ★3.5以下 → +1</div>
+      <div style="color:#475569">※ 食べログ評点は参考表示（スコア非加算）</div>
+    </div>
+    <div class="legend-levels">
+      <span><span style="color:#DC2626;font-weight:700">■ 70〜100</span> 危険</span>
+      <span><span style="color:#EA580C;font-weight:700">■ 45〜69</span> 要注意</span>
+      <span><span style="color:#CA8A04;font-weight:700">■ 25〜44</span> やや注意</span>
+      <span><span style="color:#16A34A;font-weight:700">■ 0〜24</span> 低リスク</span>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>金沢市片町 飲食店顧客満足度調査 ─ 北陸大学 山本研究室</p>
+    <p>リアルタイム検索版 v0.7 ─ 調査データに基づく参考指標です</p>
+  </div>
+</div>
+
+<div id="confirmOverlay" class="overlay hidden"></div>
+
+<script>
+/* ── Config ── */
+var SHEET_URL = "https://script.google.com/macros/s/AKfycbxnZEpb_L_nLHRx3Iwn4L-gWQG6c1qdseRf0-MrW8VLIdlI8ZZKSfMY0dImEnDA1wB0/exec";
+
+var SYSTEM_PROMPT = 'あなたは飲食店の客引き・ぼったくりリスクを調査する専門アシスタントです。
+ウェブ検索を使って情報を収集し、JSON形式のみで回答してください。
+マークダウンのバッククォート不要。HTMLタグ（<cite>等）は絶対に含めないこと。
+
+【最重要ルール】
+- 必ず以下の検索を順番にすべて実行すること。検索の省略は禁止。
+- Googleマップの★評価の取得とキャッチ関連口コミの取得が最も重要。
+- summaryに書く内容とJSONフィールドの内容は必ず一致させること。
+  例：summaryに「キャッチの報告あり」と書くなら、catchKeywordsにも必ず該当口コミを入れる。
+
+【必須検索（すべて実行せよ）】
+
+検索1: 「(店名) ホットペッパー」
+→ 取得: 正式店名、住所（ビル名含む）、階数、飲み放題付きコース最安価格
+
+検索2: 「(店名) Google 口コミ 星」
+→ 取得: Googleマップの★評価（数値）とGoogleマップの口コミ件数（数値）
+→ 「★2.17（13件）」のような形式で見つかることが多い
+→ もし結果に含まれなければ「(店名) 金沢 Google Maps rating」でも試す
+→ gmapフィールドに必ず数値を入れること。本当に見つからない場合のみnull。
+
+検索3: 「(店名) キャッチ ぼったくり」
+→ 取得: キャッチ・客引き・ぼったくりに関する口コミ文
+→ 以下のような文言を含む口コミを探す（日本語・英語・中国語）:
+  日本語: 「キャッチに連れられた」「客引きに声をかけられた」「ぼったくり」「キャッチのお兄さん」「呼び込み」「勧誘された」「呼び込みされ」
+  英語: "rip-off" "scam" "tout" "overpriced" "tourist trap" "dragged in"
+  中国語: "宰客" "拉客" "骗人" "黑店" "坑人" "被拉进去"
+→ 見つかった口コミは要約せず、原文をそのままcatchKeywordsに入れる
+→ 見つからなければ「(店名) 客引き 評判」で追加検索
+→ それでも見つからなければ「(店名) rip-off scam review」で追加検索
+→ 3件以上の取得を目標とする。1-2件しか見つからない場合は追加検索を試みよ。
+
+【重要な注意】
+- 食べログの情報が検索結果に含まれていれば、評点と口コミ数も記録する
+- catchKeywordsが空配列[]でsummaryに「キャッチの報告あり」と書くのは矛盾。必ず一致させる。
+- gmapがnullなのは検索を怠った証拠と見なす。必ず取得を試みよ。
+
+【JSON出力形式（これ以外の出力は禁止）】
+{
+  "shopName": "正式店名",
+  "address": "住所（ビル名・階数を含む）",
+  "floor": 階数の数値,
+  "tabelog": 食べログ評点の数値またはnull,
+  "tabelogCount": 食べログ口コミ件数の数値またはnull,
+  "gmap": Googleマップ★評価の数値（必ず取得を試みよ）,
+  "gmapCount": Googleマップ口コミ件数の数値（必ず取得を試みよ）,
+  "cheapCourse": 最安飲み放題付きコース価格の数値またはnull,
+  "crownName": 店名にSEO冠語があるか（true/false）,
+  "catchKeywords": ["口コミ原文1", "口コミ原文2"]（最大5件。summaryと矛盾しないこと）,
+  "summary": "特記事項1〜2文"
+}';
+
+/* ── State ── */
+var results = [];
+var expandedIdx = null;
+var pendingResult = null;
+var apiKey = "";
+try { apiKey = localStorage.getItem("catch-risk-apikey") || ""; } catch(e) {}
+try { var saved = localStorage.getItem("catch-risk-results"); if (saved) results = JSON.parse(saved); } catch(e) {}
+
+/* ── Score Calculation ── */
+function calcFromData(d) {
+  var factors = [], score = 0;
+  if (d.floor != null && d.floor >= 4) { factors.push({l:"空中階（高層）",det:d.floor+"F",w:2}); score+=2; }
+  else if (d.floor != null && d.floor >= 2) { factors.push({l:"空中階",det:d.floor+"F",w:1}); score+=1; }
+  if (d.cheapCourse != null && d.cheapCourse < 2000) { factors.push({l:"非現実的低価格",det:"飲放付"+d.cheapCourse+"円",w:2}); score+=2; }
+  else if (d.cheapCourse != null && d.cheapCourse < 3300) { factors.push({l:"低価格コース",det:d.cheapCourse+"円",w:1}); score+=1; }
+  if (d.catchKeywords && d.catchKeywords.length >= 3) { factors.push({l:"「キャッチ/ぼったくり」多数",det:d.catchKeywords.length+"件検出",w:3}); score+=3; }
+  else if (d.catchKeywords && d.catchKeywords.length > 0) { factors.push({l:"「キャッチ/ぼったくり」検出",det:d.catchKeywords.length+"件",w:2}); score+=2; }
+  if (d.crownName) { factors.push({l:"SEO的冠語パターン",det:"「個室」「完全個室」等を店名に使用",w:1}); score+=1; }
+  if (d.gmap != null && d.gmap <= 3.5) { factors.push({l:"Gマップ評価",det:"★"+d.gmap,w:2}); score+=2; }
+  if (d.tabelog != null && d.gmap != null && (d.gmap-d.tabelog)>=0.7) {
+    factors.push({l:"【参考】評点乖離",det:"Gマップ★"+d.gmap+" vs 食べログ"+d.tabelog+"（差"+(d.gmap-d.tabelog).toFixed(1)+"）",w:0});
+  }
+  if (d.tabelog != null && d.tabelog <= 3.02) { factors.push({l:"【参考】食べログ低評価",det:""+d.tabelog,w:0}); }
+  if (d.gmapCount >= 500 && (d.tabelog == null || d.tabelog < 3.1)) {
+    factors.push({l:"【参考】口コミ数の異常",det:"Gマップ"+d.gmapCount+"件 × 食べログ"+(d.tabelog!=null?d.tabelog:"未掲載"),w:0});
+  }
+  var riskPct = Math.min(Math.round((score/10)*100),100);
+  var pct = 100 - riskPct;
+  var level = pct<=30?"低満足":pct<=55?"やや不満":pct<=75?"普通":"高満足";
+  var color = pct<=30?"#DC2626":pct<=55?"#EA580C":pct<=75?"#CA8A04":"#16A34A";
+  return {score:score,pct:pct,riskPct:riskPct,level:level,color:color,factors:factors};
+}
+
+/* ── Helpers ── */
+function esc(s) { if (!s) return ""; var d=document.createElement("div"); d.textContent=s; return d.innerHTML; }
+
+function meterSVG(pct,color,level,size) {
+  var r=(size-16)/2, circ=2*Math.PI*r;
+  return '<div class="meter" style="width:'+size+'px;height:'+size+'px">'+
+    '<svg viewBox="0 0 '+size+' '+size+'" width="'+size+'" height="'+size+'">'+
+    '<circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="#1E293B" stroke-width="8"/>'+
+    '<circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="'+color+'" stroke-width="8" '+
+    'stroke-dasharray="'+(pct/100*circ)+' '+circ+'" stroke-linecap="round" '+
+    'transform="rotate(-90 '+size/2+' '+size/2+')"/>'+
+    '</svg>'+
+    '<div class="meter-inner">'+
+    '<span style="font-size:'+(size*0.23)+'px;font-weight:800;color:'+color+';font-family:DM Mono,monospace">'+pct+'</span>'+
+    '<span style="font-size:'+(size*0.085)+'px;color:#94A3B8;letter-spacing:1px">'+level+'</span>'+
+    '</div></div>';
+}
+
+function saveResults() {
+  try { localStorage.setItem("catch-risk-results", JSON.stringify(results)); } catch(e) {}
+}
+
+function sendToSheet(result, risk) {
+  try {
+    fetch(SHEET_URL, {method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        timestamp:result.timestamp, shopName:result.shopName, area:result.area,
+        address:result.address, floor:result.floor, tabelog:result.tabelog,
+        tabelogCount:result.tabelogCount, gmap:result.gmap, gmapCount:result.gmapCount,
+        cheapCourse:result.cheapCourse, crownName:result.crownName, 
+        catchKeywords:result.catchKeywords, riskPct:risk.pct, riskLevel:risk.level,
+        riskFactors:risk.factors.map(function(f){return f.l+"(+"+f.w+")"}).join(", "),
+        summary:result.summary
+      })
+    });
+  } catch(e) { console.error("Sheet error:",e); }
+}
+
+/* ── API Key UI ── */
+function renderApiSection() {
+  var el = document.getElementById("apiSection");
+  if (!apiKey.trim()) {
+    el.innerHTML = '<div class="apibox">'+
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'+
+      '<span style="font-size:16px">🔑</span>'+
+      '<span style="font-size:13px;color:#CA8A04;font-weight:700">APIキーを入力してください</span></div>'+
+      '<input type="password" id="apiKeyInput" placeholder="sk-ant-api03-...">'+
+      '<p style="margin:8px 0 0;font-size:11px;color:#475569">キーはこのブラウザにのみ保存され、外部には送信されません（Anthropic APIへの通信のみに使用）</p></div>';
+    document.getElementById("apiKeyInput").addEventListener("change", function() {
+      apiKey = this.value;
+      try { localStorage.setItem("catch-risk-apikey", apiKey); } catch(e) {}
+      renderApiSection();
+    });
+  } else {
+    el.innerHTML = '<div class="api-ok"><span>🔑 APIキー設定済み</span>'+
+      '<button id="clearApiBtn">キーを変更</button></div>';
+    document.getElementById("clearApiBtn").addEventListener("click", function() {
+      apiKey = "";
+      try { localStorage.removeItem("catch-risk-apikey"); } catch(e) {}
+      renderApiSection();
+    });
+  }
+}
+
+/* ── Merge ── */
+function mergeResult(newR, list) {
+  var idx = -1;
+  for (var i=0; i<list.length; i++) {
+    if (list[i].shopName.replace(/\s/g,"") === newR.shopName.replace(/\s/g,"")) { idx=i; break; }
+  }
+  if (idx === -1) return [newR].concat(list);
+  var old = list[idx];
+  var merged = {};
+  for (var k in newR) merged[k] = newR[k];
+  var allKW = (old.catchKeywords||[]).concat(newR.catchKeywords||[]);
+  merged.catchKeywords = allKW.filter(function(v,i,a){return a.indexOf(v)===i}).slice(0,10);
+  var rest = [];
+  for (var i=0; i<list.length; i++) { if (i!==idx) rest.push(list[i]); }
+  return [merged].concat(rest);
+}
+
+function registerResult(result) {
+  results = mergeResult(result, results);
+  expandedIdx = 0;
+  saveResults();
+  sendToSheet(result, calcFromData(result));
+  document.getElementById("queryInput").value = "";
+  render();
+}
+
+/* ── Confirm Dialog ── */
+function showConfirmDialog(result) {
+  pendingResult = result;
+  var ov = document.getElementById("confirmOverlay");
+  ov.className = "overlay";
+  ov.innerHTML = '<div class="modal">'+
+    '<h3>🔍 店舗の確認</h3>'+
+    '<p style="margin:0 0 16px;font-size:12px;color:#64748B">検索語「'+esc(result.query)+'」に対して以下の店舗が見つかりました。この店舗で合っていますか？</p>'+
+    '<div class="modal-detail">'+
+    '<p style="margin:0 0 6px;font-size:15px;color:#F1F5F9;font-weight:700">'+esc(result.shopName)+'</p>'+
+    '<p style="margin:0 0 4px;font-size:12px;color:#94A3B8">📍 '+esc(result.address)+'</p>'+
+    (result.gmap!=null?'<p style="margin:0;font-size:12px;color:#94A3B8">⭐ Gマップ ★'+result.gmap+'</p>':'')+
+    '</div>'+
+    '<div class="modal-btns">'+
+    '<button id="confirmNo" style="background:#1E293B;color:#94A3B8">違う店舗です</button>'+
+    '<button id="confirmYes" style="background:#2563EB;color:#fff;font-weight:700">合っています</button>'+
+    '</div></div>';
+  document.getElementById("confirmNo").addEventListener("click", closeConfirm);
+  document.getElementById("confirmYes").addEventListener("click", function() {
+    if (pendingResult) registerResult(pendingResult);
+    closeConfirm();
+  });
+}
+function closeConfirm() {
+  pendingResult = null;
+  document.getElementById("confirmOverlay").className = "overlay hidden";
+}
+
+function stripTags(s) { if (!s) return s; return s.replace(/<[^>]*>/g, ""); }
+
+/* ── Search ── */
+function showLoading(on) {
+  var el = document.getElementById("loadingArea");
+  var btn = document.getElementById("searchBtn");
+  if (on) {
+    el.className = "";
+    el.innerHTML = '<div class="loading"><div class="spinner"></div>'+
+      '<p style="color:#94A3B8;font-size:13px">ウェブ検索を実行中…</p>'+
+      '<p style="color:#475569;font-size:11px;margin-top:8px">Googleマップ・ホットペッパー・口コミを横断検索しています（10〜20秒）</p></div>';
+    btn.disabled = true; btn.textContent = "検索中…";
+  } else {
+    el.className = "hidden"; el.innerHTML = "";
+    btn.disabled = false; btn.textContent = "調査開始";
+  }
+}
+function showError(msg) {
+  var el = document.getElementById("errorArea");
+  el.className = ""; el.innerHTML = '<div class="error-box">'+esc(msg)+'</div>';
+}
+function hideError() {
+  var el = document.getElementById("errorArea");
+  el.className = "hidden"; el.innerHTML = "";
+}
+
+async function doSearch() {
+  var q = document.getElementById("queryInput").value.trim();
+  var a = document.getElementById("areaInput").value.trim();
+  if (!q) return;
+  if (!apiKey.trim()) { showError("APIキーを入力してください（画面上部の🔑欄）"); return; }
+  showLoading(true);
+  hideError();
+  try {
+    var resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {"Content-Type":"application/json","x-api-key":apiKey.trim(),"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+      body: JSON.stringify({
+        model:"claude-sonnet-4-20250514", max_tokens:2000, system:SYSTEM_PROMPT,
+        messages:[{role:"user",content:"以下の店舗を調査してください: "+q+(a?"（エリア: "+a+"）":"")}],
+        tools:[{type:"web_search_20250305",name:"web_search"}]
+      })
+    });
+    var data = await resp.json();
+    if (data.error) {
+      showError("APIエラー: "+(data.error.message||JSON.stringify(data.error)));
+      showLoading(false); return;
+    }
+    var texts = [];
+    if (data.content) {
+      for (var i=0; i<data.content.length; i++) {
+        if (data.content[i].type==="text") texts.push(data.content[i].text);
+      }
+    }
+    var allText = texts.join("\n").replace(/```json|```/g,"").trim();
+    var m = allText.match(/\{[\s\S]*\}/);
+    if (!m) { showError("検索結果を解析できませんでした。店名を正確に入力してください。"); showLoading(false); return; }
+    var parsed = JSON.parse(m[0]);
+    var now = new Date();
+    var pad = function(n){return ("0"+n).slice(-2)};
+    var ts = now.getFullYear()+"/"+pad(now.getMonth()+1)+"/"+pad(now.getDate())+" "+pad(now.getHours())+":"+pad(now.getMinutes());
+    var result = {
+      id: Date.now()+"-"+Math.random().toString(36).slice(2,8),
+      query:q, area:a, shopName:stripTags(parsed.shopName)||q,
+      address:stripTags(parsed.address)||"不明", floor:parsed.floor,
+      tabelog:parsed.tabelog, tabelogCount:parsed.tabelogCount,
+      gmap:parsed.gmap, gmapCount:parsed.gmapCount,
+      cheapCourse:parsed.cheapCourse, crownName:parsed.crownName||false,
+      catchKeywords:(parsed.catchKeywords||[]).map(stripTags),
+      summary:stripTags(parsed.summary)||"", timestamp:ts
+    };
+    var sn = (parsed.shopName||"").toLowerCase();
+    var ql = q.toLowerCase();
+    var isExact = sn.indexOf(ql)>=0 || ql.indexOf(sn)>=0 || q.length>=10;
+    if (isExact) { registerResult(result); } else { showConfirmDialog(result); }
+  } catch(e) {
+    showError("検索中にエラーが発生しました: "+e.message);
+  }
+  showLoading(false);
+}
+
+/* ── Render ── */
+function render() {
+  var area = document.getElementById("resultsArea");
+  var empty = document.getElementById("emptyState");
+  var stats = document.getElementById("statsArea");
+  var isMobile = window.innerWidth < 480;
+  var mSize = isMobile ? 80 : 120;
+
+  if (results.length === 0) {
+    area.innerHTML = "";
+    stats.className = "hidden";
+    empty.innerHTML = '<div class="empty"><div style="font-size:48px;margin-bottom:16px">🏮</div>'+
+      '<p style="font-size:14px;line-height:1.7">上の検索ボックスに居酒屋の店名を入力してください。<br>'+
+      'Googleマップ・ホットペッパー・口コミを自動検索し、<br>顧客満足度を調査します。</p>'+
+      '<p style="font-size:13px;color:#475569;margin-top:16px;line-height:1.7">調査結果はGoogleスプレッドシートに自動集約されます。</p></div>';
+    return;
+  }
+  empty.innerHTML = "";
+  var dc=0, cc=0;
+  for (var i=0; i<results.length; i++) {
+    var p = calcFromData(results[i]).pct;
+    if (p>=70) dc++; else if (p>=45) cc++;
+  }
+  stats.className = "";
+  stats.innerHTML = '<div class="stats">'+results.length+'店舗調査済'+
+    (dc>0?'<span style="color:#DC2626;margin-left:6px">（危険'+dc+'）</span>':'')+
+    (cc>0?'<span style="color:#EA580C;margin-left:4px">（要注意'+cc+'）</span>':'')+'</div>';
+
+  var html = "";
+  for (var idx=0; idx<results.length; idx++) {
+    var r = results[idx];
+    var risk = calcFromData(r);
+    var bg = risk.pct>=70?"linear-gradient(135deg,#1a0505 0%,#0F172A 100%)":risk.pct>=45?"linear-gradient(135deg,#1a0f05 0%,#0F172A 100%)":"linear-gradient(135deg,#0F172A 0%,#0F172A 100%)";
+    var bd = risk.pct>=70?"#7F1D1D":risk.pct>=45?"#7C2D12":"#1E293B";
+    var sh = risk.pct>=70?"0 0 30px rgba(220,38,38,0.15)":"none";
+    html += '<div class="card" style="background:'+bg+';border:1px solid '+bd+';box-shadow:'+sh+'" data-idx="'+idx+'">';
+    html += '<div class="card-header">';
+    html += meterSVG(risk.pct, risk.color, risk.level, mSize);
+    html += '<div style="flex:1;min-width:0">';
+    html += '<h3>'+esc(r.shopName)+'</h3>';
+    html += '<p class="addr">'+esc(r.address)+(r.area?'<span class="area-badge">'+esc(r.area)+'</span>':'')+'</p>';
+    html += '<div class="tags">';
+    if (r.tabelog!=null) html+='<span class="tag" style="background:'+(r.tabelog<3.1?"#7F1D1D":"#1E293B")+';color:'+(r.tabelog<3.1?"#FCA5A5":"#94A3B8")+'">食べログ '+r.tabelog+'</span>';
+    if (r.gmap!=null) html+='<span class="tag" style="background:#1E293B;color:#94A3B8">Gマップ ★'+r.gmap+'</span>';
+    if (r.cheapCourse!=null && r.cheapCourse<3300) html+='<span class="tag" style="background:#7C2D12;color:#FDBA74">飲放'+r.cheapCourse+'円</span>';
+    html += '</div>';
+    html += '<p class="ts">'+esc(r.timestamp)+'</p>';
+    html += '</div></div>';
+
+    if (expandedIdx === idx) {
+      html += '<div class="detail">';
+      if (r.summary) html += '<p class="summary-box">'+esc(r.summary)+'</p>';
+      html += '<h4 style="color:#F1F5F9;font-size:14px;margin:0 0 12px">減点要因分析</h4>';
+      if (risk.factors.length===0) html+='<p style="color:#64748B;font-size:13px">特筆すべき減点要因は検出されませんでした。</p>';
+      for (var fi=0; fi<risk.factors.length; fi++) {
+        var f = risk.factors[fi];
+        var fbg = f.w>=3?"#DC2626":f.w>=2?"#EA580C":f.w>=1?"#CA8A04":"#475569";
+        html += '<div class="factor"><span class="fw" style="background:'+fbg+'">+'+f.w+'</span><div><span style="color:#E2E8F0;font-size:13px;font-weight:600">'+esc(f.l)+'</span><span style="color:#64748B;font-size:12px;margin-left:8px">'+esc(f.det)+'</span></div></div>';
+      }
+      if (r.catchKeywords && r.catchKeywords.length>0) {
+        html += '<div style="margin-top:16px"><h4 style="color:#FCA5A5;font-size:13px;margin:0 0 8px">口コミから検出されたキーワード</h4>';
+        for (var ki=0; ki<r.catchKeywords.length; ki++) {
+          html += '<div class="kw-item">「'+esc(r.catchKeywords[ki])+'」</div>';
+        }
+        html += '</div>';
+      }
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+  area.innerHTML = html;
+
+  // Attach click handlers
+  var cards = area.querySelectorAll(".card");
+  for (var ci=0; ci<cards.length; ci++) {
+    cards[ci].addEventListener("click", function() {
+      var i = parseInt(this.getAttribute("data-idx"));
+      expandedIdx = (expandedIdx===i) ? null : i;
+      render();
+    });
+  }
+}
+
+/* ── Init ── */
+document.getElementById("searchBtn").addEventListener("click", doSearch);
+document.getElementById("queryInput").addEventListener("keydown", function(e){if(e.key==="Enter")doSearch()});
+document.getElementById("areaInput").addEventListener("keydown", function(e){if(e.key==="Enter")doSearch()});
+renderApiSection();
+render();
+</script>
+</body>
+</html>
