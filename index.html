@@ -104,22 +104,21 @@ h1{font-size:24px;font-weight:800;line-height:1.3;background:linear-gradient(135
   <div id="emptyState"></div>
 
   <div class="legend">
-    <h4>スコアリング基準</h4>
+    <h4>満足度の判定基準</h4>
     <div class="legend-grid">
-      <div>• 所在階4F以上 → +2 / 2-3F → +1</div>
-      <div>• 飲放付2,000円未満 → +2 / 3,300円未満 → +1</div>
-      <div>• 口コミ「キャッチ/ぼったくり」3件超 → +3</div>
-      <div>• 口コミ「キャッチ/ぼったくり」1-2件 → +2</div>
-      <div>• 同住所に別店舗 → +1</div>
-      <div>• SEO的冠語（個室/完全個室等）→ +1</div>
-      <div>• Gマップ★3.5以下 → +1</div>
-      <div style="color:#475569">※ 食べログ評点は参考表示（スコア非加算）</div>
+      <div>• 所在階4F以上 → −2 / 2-3F → −1</div>
+      <div>• 飲放付2,000円未満 → −2 / 3,300円未満 → −1</div>
+      <div>• ネガティブ口コミ3件超 → −3</div>
+      <div>• ネガティブ口コミ1-2件 → −2</div>
+      <div>• SEO的冠語（個室/完全個室等）→ −1</div>
+      <div>• Gマップ評価★3.5以下 → −2</div>
+      <div style="color:#475569">※ 食べログ評点は参考表示</div>
     </div>
     <div class="legend-levels">
-      <span><span style="color:#DC2626;font-weight:700">■ 70〜100</span> 危険</span>
-      <span><span style="color:#EA580C;font-weight:700">■ 45〜69</span> 要注意</span>
-      <span><span style="color:#CA8A04;font-weight:700">■ 25〜44</span> やや注意</span>
-      <span><span style="color:#16A34A;font-weight:700">■ 0〜24</span> 低リスク</span>
+      <span><span style="color:#16A34A;font-weight:700">■ 76〜100</span> 高満足</span>
+      <span><span style="color:#CA8A04;font-weight:700">■ 56〜75</span> 普通</span>
+      <span><span style="color:#EA580C;font-weight:700">■ 31〜55</span> やや不満</span>
+      <span><span style="color:#DC2626;font-weight:700">■ 0〜30</span> 低満足</span>
     </div>
   </div>
 
@@ -135,57 +134,7 @@ h1{font-size:24px;font-weight:800;line-height:1.3;background:linear-gradient(135
 /* ── Config ── */
 var SHEET_URL = "https://script.google.com/macros/s/AKfycbxnZEpb_L_nLHRx3Iwn4L-gWQG6c1qdseRf0-MrW8VLIdlI8ZZKSfMY0dImEnDA1wB0/exec";
 
-var SYSTEM_PROMPT = 'あなたは飲食店の客引き・ぼったくりリスクを調査する専門アシスタントです。
-ウェブ検索を使って情報を収集し、JSON形式のみで回答してください。
-マークダウンのバッククォート不要。HTMLタグ（<cite>等）は絶対に含めないこと。
-
-【最重要ルール】
-- 必ず以下の検索を順番にすべて実行すること。検索の省略は禁止。
-- Googleマップの★評価の取得とキャッチ関連口コミの取得が最も重要。
-- summaryに書く内容とJSONフィールドの内容は必ず一致させること。
-  例：summaryに「キャッチの報告あり」と書くなら、catchKeywordsにも必ず該当口コミを入れる。
-
-【必須検索（すべて実行せよ）】
-
-検索1: 「(店名) ホットペッパー」
-→ 取得: 正式店名、住所（ビル名含む）、階数、飲み放題付きコース最安価格
-
-検索2: 「(店名) Google 口コミ 星」
-→ 取得: Googleマップの★評価（数値）とGoogleマップの口コミ件数（数値）
-→ 「★2.17（13件）」のような形式で見つかることが多い
-→ もし結果に含まれなければ「(店名) 金沢 Google Maps rating」でも試す
-→ gmapフィールドに必ず数値を入れること。本当に見つからない場合のみnull。
-
-検索3: 「(店名) キャッチ ぼったくり」
-→ 取得: キャッチ・客引き・ぼったくりに関する口コミ文
-→ 以下のような文言を含む口コミを探す（日本語・英語・中国語）:
-  日本語: 「キャッチに連れられた」「客引きに声をかけられた」「ぼったくり」「キャッチのお兄さん」「呼び込み」「勧誘された」「呼び込みされ」
-  英語: "rip-off" "scam" "tout" "overpriced" "tourist trap" "dragged in"
-  中国語: "宰客" "拉客" "骗人" "黑店" "坑人" "被拉进去"
-→ 見つかった口コミは要約せず、原文をそのままcatchKeywordsに入れる
-→ 見つからなければ「(店名) 客引き 評判」で追加検索
-→ それでも見つからなければ「(店名) rip-off scam review」で追加検索
-→ 3件以上の取得を目標とする。1-2件しか見つからない場合は追加検索を試みよ。
-
-【重要な注意】
-- 食べログの情報が検索結果に含まれていれば、評点と口コミ数も記録する
-- catchKeywordsが空配列[]でsummaryに「キャッチの報告あり」と書くのは矛盾。必ず一致させる。
-- gmapがnullなのは検索を怠った証拠と見なす。必ず取得を試みよ。
-
-【JSON出力形式（これ以外の出力は禁止）】
-{
-  "shopName": "正式店名",
-  "address": "住所（ビル名・階数を含む）",
-  "floor": 階数の数値,
-  "tabelog": 食べログ評点の数値またはnull,
-  "tabelogCount": 食べログ口コミ件数の数値またはnull,
-  "gmap": Googleマップ★評価の数値（必ず取得を試みよ）,
-  "gmapCount": Googleマップ口コミ件数の数値（必ず取得を試みよ）,
-  "cheapCourse": 最安飲み放題付きコース価格の数値またはnull,
-  "crownName": 店名にSEO冠語があるか（true/false）,
-  "catchKeywords": ["口コミ原文1", "口コミ原文2"]（最大5件。summaryと矛盾しないこと）,
-  "summary": "特記事項1〜2文"
-}';
+var SYSTEM_PROMPT = 'あなたは飲食店の客引き・ぼったくりリスクを調査する専門アシスタントです。\nウェブ検索を使って情報を収集し、JSON形式のみで回答してください。\nマークダウンのバッククォート不要。HTMLタグ（<cite>等）は絶対に含めないこと。\n\n【最重要ルール】\n- 必ず以下の検索を順番にすべて実行すること。検索の省略は禁止。\n- Googleマップの★評価の取得とキャッチ関連口コミの取得が最も重要。\n- summaryに書く内容とJSONフィールドの内容は必ず一致させること。\n  例：summaryに「キャッチの報告あり」と書くなら、catchKeywordsにも必ず該当口コミを入れる。\n\n【必須検索（すべて実行せよ）】\n\n検索1: 「(店名) ホットペッパー」\n→ 取得: 正式店名、住所（ビル名含む）、階数、飲み放題付きコース最安価格\n\n検索2: 「(店名) Google 口コミ 星」\n→ 取得: Googleマップの★評価（数値）とGoogleマップの口コミ件数（数値）\n→ 「★2.17（13件）」のような形式で見つかることが多い\n→ もし結果に含まれなければ「(店名) 金沢 Google Maps rating」でも試す\n→ gmapフィールドに必ず数値を入れること。本当に見つからない場合のみnull。\n\n検索3: 「(店名) キャッチ ぼったくり」\n→ 取得: キャッチ・客引き・ぼったくりに関する口コミ文\n→ 以下のような文言を含む口コミを探す（日本語・英語・中国語）:\n  日本語: 「キャッチに連れられた」「客引きに声をかけられた」「ぼったくり」「キャッチのお兄さん」「呼び込み」「勧誘された」「呼び込みされ」\n  英語: "rip-off" "scam" "tout" "overpriced" "tourist trap" "dragged in"\n  中国語: "宰客" "拉客" "骗人" "黑店" "坑人" "被拉进去"\n→ 見つかった口コミは要約せず、原文をそのままcatchKeywordsに入れる\n→ 見つからなければ「(店名) 客引き 評判」で追加検索\n→ それでも見つからなければ「(店名) rip-off scam review」で追加検索\n→ 3件以上の取得を目標とする。1-2件しか見つからない場合は追加検索を試みよ。\n\n【重要な注意】\n- 食べログの情報が検索結果に含まれていれば、評点と口コミ数も記録する\n- catchKeywordsが空配列[]でsummaryに「キャッチの報告あり」と書くのは矛盾。必ず一致させる。\n- gmapがnullなのは検索を怠った証拠と見なす。必ず取得を試みよ。\n\n【JSON出力形式（これ以外の出力は禁止）】\n{\n  "shopName": "正式店名",\n  "address": "住所（ビル名・階数を含む）",\n  "floor": 階数の数値,\n  "tabelog": 食べログ評点の数値またはnull,\n  "tabelogCount": 食べログ口コミ件数の数値またはnull,\n  "gmap": Googleマップ★評価の数値（必ず取得を試みよ）,\n  "gmapCount": Googleマップ口コミ件数の数値（必ず取得を試みよ）,\n  "cheapCourse": 最安飲み放題付きコース価格の数値またはnull,\n  "crownName": 店名にSEO冠語があるか（true/false）,\n  "catchKeywords": ["口コミ原文1", "口コミ原文2"]（最大5件。summaryと矛盾しないこと）,\n  "summary": "特記事項1〜2文"\n}';
 
 /* ── State ── */
 var results = [];
